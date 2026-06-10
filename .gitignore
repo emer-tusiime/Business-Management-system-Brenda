@@ -1,0 +1,29 @@
+# Build outputs
+bin/
+obj/
+out/
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Logs and local data
+logs/
+*.log
+
+# NuGet
+*.nupkg
+packages/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Secrets
+appsettings.Development.json
+*.pfx

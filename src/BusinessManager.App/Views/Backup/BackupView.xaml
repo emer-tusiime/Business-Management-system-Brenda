@@ -1,0 +1,275 @@
+<UserControl x:Class="BusinessManager.App.Views.Backup.BackupView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             d:DesignHeight="800" d:DesignWidth="1200"
+             Loaded="BackupView_Loaded">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <materialDesign:ColorZone Grid.Row="0" 
+                                  Mode="PrimaryMid" 
+                                  Padding="16"
+                                  Margin="0,0,0,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Grid.Column="0"
+                           Text="Backup &amp; Restore"
+                           Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                           Foreground="White"/>
+                
+                <StackPanel Grid.Column="1" 
+                            Orientation="Horizontal">
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            Command="{Binding RefreshCommand}"
+                            Foreground="White"
+                            Margin="0,0,8,0">
+                        <materialDesign:PackIcon Kind="Refresh"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </materialDesign:ColorZone>
+        
+        <!-- Main Content -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Left: Backups List -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
+                <!-- Backups DataGrid -->
+                <materialDesign:Card Grid.Row="0">
+                    <Grid Margin="16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock Grid.Row="0"
+                                   Text="Available Backups"
+                                   Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                   Margin="0,0,0,16"/>
+                        
+                        <DataGrid Grid.Row="1"
+                                  ItemsSource="{Binding Backups}"
+                                  SelectedItem="{Binding SelectedBackup}"
+                                  Style="{StaticResource MaterialDesignDataGrid}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True"
+                                  GridLinesVisibility="Horizontal"
+                                  HeadersVisibility="Column"
+                                  Height="400">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Description" 
+                                                    Binding="{Binding Description}"
+                                                    Width="200"/>
+                                <DataGridTextColumn Header="Created" 
+                                                    Binding="{Binding CreatedAt, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"
+                                                    Width="140"/>
+                                <DataGridTextColumn Header="Size" 
+                                                    Binding="{Binding FileSize}"
+                                                    Width="80"/>
+                                <DataGridTextColumn Header="Type" 
+                                                    Binding="{Binding BackupType}"
+                                                    Width="100"/>
+                                <DataGridTextColumn Header="Created By" 
+                                                    Binding="{Binding CreatedBy}"
+                                                    Width="100"/>
+                                <DataGridTemplateColumn Header="Actions" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                        Command="{Binding DataContext.RestoreBackupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip="Restore Backup"
+                                                        Margin="0,0,2,0">
+                                                    <materialDesign:PackIcon Kind="Restore"/>
+                                                </Button>
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                        Command="{Binding DataContext.DownloadBackupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip="Download Backup"
+                                                        Margin="0,0,2,0">
+                                                    <materialDesign:PackIcon Kind="Download"/>
+                                                </Button>
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                        Command="{Binding DataContext.DeleteBackupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip="Delete Backup">
+                                                    <materialDesign:PackIcon Kind="Delete"/>
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </materialDesign:Card>
+            </Grid>
+            
+            <!-- Splitter -->
+            <GridSplitter Grid.Column="1" 
+                          HorizontalAlignment="Stretch" 
+                          Background="LightGray"/>
+            
+            <!-- Right: Backup & Restore Operations -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <!-- Create Backup -->
+                <materialDesign:Card Grid.Row="0" Margin="0,0,0,8">
+                    <Grid Margin="16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock Grid.Row="0"
+                                   Text="Create Backup"
+                                   Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                   Margin="0,0,0,16"/>
+                        
+                        <TextBox Grid.Row="1"
+                                 materialDesign:HintAssist.Hint="Backup Description"
+                                 Text="{Binding BackupDescription}"
+                                 Margin="0,0,0,8"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        
+                        <Button Grid.Row="2"
+                                Content="Create Backup"
+                                Command="{Binding CreateBackupCommand}"
+                                Margin="0,0,0,8"
+                                IsEnabled="{Binding IsCreatingBackup, Converter={StaticResource InverseBooleanConverter}}">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                    <Setter Property="IsEnabled" Value="True"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsCreatingBackup}" Value="True">
+                                            <Setter Property="IsEnabled" Value="False"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        
+                        <ProgressBar Grid.Row="3"
+                                     IsIndeterminate="True"
+                                     Visibility="{Binding IsCreatingBackup, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    </Grid>
+                </materialDesign:Card>
+                
+                <!-- Restore from File -->
+                <materialDesign:Card Grid.Row="1" Margin="0,0,0,8">
+                    <Grid Margin="16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock Grid.Row="0"
+                                   Text="Restore from File"
+                                   Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                   Margin="0,0,0,16"/>
+                        
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <TextBox Grid.Column="0"
+                                     materialDesign:HintAssist.Hint="Select backup file"
+                                     Text="{Binding RestoreFilePath}"
+                                     IsReadOnly="True"
+                                     Margin="0,0,8,0"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                            
+                            <Button Grid.Column="1"
+                                    Content="Browse"
+                                    Command="{Binding BrowseFileCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                        </Grid>
+                        
+                        <Button Grid.Row="2"
+                                Content="Restore Backup"
+                                Command="{Binding RestoreFromFileCommand}"
+                                Margin="0,8,0,8"
+                                IsEnabled="{Binding IsRestoring, Converter={StaticResource InverseBooleanConverter}}">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                    <Setter Property="IsEnabled" Value="True"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsRestoring}" Value="True">
+                                            <Setter Property="IsEnabled" Value="False"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        
+                        <ProgressBar Grid.Row="3"
+                                     IsIndeterminate="True"
+                                     Visibility="{Binding IsRestoring, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    </Grid>
+                </materialDesign:Card>
+                
+                <!-- Backup Settings -->
+                <materialDesign:Card Grid.Row="2">
+                    <Grid Margin="16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock Grid.Row="0"
+                                   Text="Backup Settings"
+                                   Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                   Margin="0,0,0,16"/>
+                        
+                        <StackPanel Grid.Row="1">
+                            <TextBlock Text="{Binding Backups.Count, StringFormat='Total Backups: {0}'}"
+                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                       Margin="0,0,0,4"/>
+                            <TextBlock Text="{Binding BackupRetentionDays, StringFormat='Retention Period: {0} days'}"
+                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                       Margin="0,0,0,4"/>
+                            <TextBlock Text="Backups are automatically cleaned up after retention period"
+                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                       Opacity="0.7"/>
+                        </StackPanel>
+                    </Grid>
+                </materialDesign:Card>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

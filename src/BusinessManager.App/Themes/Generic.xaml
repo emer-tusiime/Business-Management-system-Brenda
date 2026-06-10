@@ -1,0 +1,68 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+                    xmlns:converters="clr-namespace:BusinessManager.App.Converters">
+    
+    <!-- Converters -->
+    <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+    <converters:ProfitToColorConverter x:Key="ProfitToColorConverter"/>
+    <converters:CurrencyConverter x:Key="CurrencyConverter"/>
+    <converters:DateFormatConverter x:Key="DateFormatConverter"/>
+    <converters:BoolToEditModeConverter x:Key="BoolToEditModeConverter"/>
+    <converters:BoolToEditModeDescriptionConverter x:Key="BoolToEditModeDescriptionConverter"/>
+    <converters:BoolToSaveButtonTextConverter x:Key="BoolToSaveButtonTextConverter"/>
+    <converters:StockStatusToColorConverter x:Key="StockStatusToColorConverter"/>
+    <converters:StockStatusToTextConverter x:Key="StockStatusToTextConverter"/>
+    
+    <!-- Card Styles -->
+    <Style x:Key="SummaryCardStyle" TargetType="materialDesign:Card">
+        <Setter Property="Padding" Value="16"/>
+        <Setter Property="Margin" Value="8"/>
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.3"/>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <!-- Button Styles -->
+    <Style x:Key="QuickActionButton" TargetType="Button">
+        <Setter Property="Margin" Value="4"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="Height" Value="40"/>
+    </Style>
+    
+    <!-- DataGrid Styles -->
+    <Style x:Key="ModernDataGrid" TargetType="DataGrid">
+        <Setter Property="AutoGenerateColumns" Value="False"/>
+        <Setter Property="CanUserAddRows" Value="False"/>
+        <Setter Property="CanUserDeleteRows" Value="False"/>
+        <Setter Property="IsReadOnly" Value="True"/>
+        <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+        <Setter Property="HeadersVisibility" Value="Column"/>
+        <Setter Property="SelectionMode" Value="Single"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    
+    <!-- TextBlock Styles -->
+    <Style x:Key="CardTitle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Margin" Value="0,0,0,8"/>
+    </Style>
+    
+    <Style x:Key="CardValue" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    
+    <!-- Loading Indicator -->
+    <Style x:Key="LoadingOverlay" TargetType="Grid">
+        <Setter Property="Background" Value="#80000000"/>
+        <Setter Property="Panel.ZIndex" Value="999"/>
+    </Style>
+</ResourceDictionary>

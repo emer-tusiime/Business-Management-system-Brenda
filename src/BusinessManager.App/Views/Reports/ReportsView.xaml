@@ -1,0 +1,234 @@
+<UserControl x:Class="BusinessManager.App.Views.Reports.ReportsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             d:DesignHeight="800" d:DesignWidth="1200"
+             Loaded="ReportsView_Loaded">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <materialDesign:ColorZone Grid.Row="0" 
+                                  Mode="PrimaryMid" 
+                                  Padding="16"
+                                  Margin="0,0,0,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Grid.Column="0"
+                           Text="Reports &amp; Analytics"
+                           Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                           Foreground="White"/>
+                
+                <StackPanel Grid.Column="1" 
+                            Orientation="Horizontal">
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            Command="{Binding RefreshCommand}"
+                            Foreground="White"
+                            Margin="0,0,8,0">
+                        <materialDesign:PackIcon Kind="Refresh"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </materialDesign:ColorZone>
+        
+        <!-- Main Content -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Left: Reports List -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
+                <!-- Reports DataGrid -->
+                <materialDesign:Card Grid.Row="0">
+                    <Grid Margin="16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock Grid.Row="0"
+                                   Text="Generated Reports"
+                                   Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                   Margin="0,0,0,16"/>
+                        
+                        <DataGrid Grid.Row="1"
+                                  ItemsSource="{Binding Reports}"
+                                  SelectedItem="{Binding SelectedReport}"
+                                  Style="{StaticResource MaterialDesignDataGrid}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True"
+                                  GridLinesVisibility="Horizontal"
+                                  HeadersVisibility="Column"
+                                  Height="400">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Report Name" 
+                                                    Binding="{Binding Name}"
+                                                    Width="200"/>
+                                <DataGridTextColumn Header="Type" 
+                                                    Binding="{Binding ReportType}"
+                                                    Width="100"/>
+                                <DataGridTextColumn Header="Period" 
+                                                    Binding="{Binding Period}"
+                                                    Width="120"/>
+                                <DataGridTextColumn Header="Generated" 
+                                                    Binding="{Binding GeneratedAt, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"
+                                                    Width="140"/>
+                                <DataGridTextColumn Header="Size" 
+                                                    Binding="{Binding FileSize}"
+                                                    Width="80"/>
+                                <DataGridTemplateColumn Header="Actions" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                        Command="{Binding DataContext.ViewReportCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip="View Report"
+                                                        Margin="0,0,4,0">
+                                                    <materialDesign:PackIcon Kind="FilePdf"/>
+                                                </Button>
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                        Command="{Binding DataContext.DeleteReportCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip="Delete Report">
+                                                    <materialDesign:PackIcon Kind="Delete"/>
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </materialDesign:Card>
+            </Grid>
+            
+            <!-- Splitter -->
+            <GridSplitter Grid.Column="1" 
+                          HorizontalAlignment="Stretch" 
+                          Background="LightGray"/>
+            
+            <!-- Right: Generate Report -->
+            <Grid Grid.Column="2">
+                <materialDesign:Card>
+                    <Grid Margin="16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Header -->
+                        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+                            <TextBlock Text="Generate New Report"
+                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
+                            <TextBlock Text="Select report type and date range"
+                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                       Opacity="0.7"/>
+                        </StackPanel>
+                        
+                        <!-- Report Type -->
+                        <ComboBox Grid.Row="1"
+                                  materialDesign:HintAssist.Hint="Report Type"
+                                  SelectedItem="{Binding ReportType}"
+                                  Margin="0,0,0,8"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}">
+                            <ComboBoxItem>Sales</ComboBoxItem>
+                            <ComboBoxItem>Expenses</ComboBoxItem>
+                            <ComboBoxItem>Inventory</ComboBoxItem>
+                            <ComboBoxItem>Financial</ComboBoxItem>
+                            <ComboBoxItem>Customer</ComboBoxItem>
+                        </ComboBox>
+                        
+                        <!-- Start Date -->
+                        <DatePicker Grid.Row="2"
+                                    materialDesign:HintAssist.Hint="Start Date"
+                                    SelectedDate="{Binding StartDate}"
+                                    Margin="0,0,0,8"
+                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
+                        
+                        <!-- End Date -->
+                        <DatePicker Grid.Row="3"
+                                    materialDesign:HintAssist.Hint="End Date"
+                                    SelectedDate="{Binding EndDate}"
+                                    Margin="0,0,0,16"
+                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
+                        
+                        <!-- Generate Button -->
+                        <Button Grid.Row="4"
+                                Content="Generate Report"
+                                Command="{Binding GenerateReportCommand}"
+                                Margin="0,0,0,16"
+                                IsEnabled="{Binding IsGenerating, Converter={StaticResource InverseBooleanConverter}}">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                    <Setter Property="IsEnabled" Value="True"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsGenerating}" Value="True">
+                                            <Setter Property="IsEnabled" Value="False"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        
+                        <!-- Loading Indicator -->
+                        <ProgressBar Grid.Row="5"
+                                     IsIndeterminate="True"
+                                     Visibility="{Binding IsGenerating, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                     Margin="0,0,0,16"/>
+                        
+                        <!-- Report Info -->
+                        <Border Grid.Row="6" 
+                                Background="{DynamicResource MaterialDesignDividerBackground}"
+                                CornerRadius="4"
+                                Padding="12">
+                            <StackPanel>
+                                <TextBlock Text="Available Reports"
+                                           Style="{StaticResource MaterialDesignSubtitle2TextBlock}"
+                                           Margin="0,0,0,8"/>
+                                <TextBlock Text="• Sales Report - Detailed sales analysis"
+                                           Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                           Margin="0,0,0,4"/>
+                                <TextBlock Text="• Expenses Report - Expense breakdown by category"
+                                           Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                           Margin="0,0,0,4"/>
+                                <TextBlock Text="• Inventory Report - Stock levels and movements"
+                                           Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                           Margin="0,0,0,4"/>
+                                <TextBlock Text="• Financial Report - P&amp;L and cash flow"
+                                           Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                           Margin="0,0,0,4"/>
+                                <TextBlock Text="• Customer Report - Customer analytics"
+                                           Style="{StaticResource MaterialDesignBody2TextBlock}"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </materialDesign:Card>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

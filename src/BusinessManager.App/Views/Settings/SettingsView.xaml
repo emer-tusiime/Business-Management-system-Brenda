@@ -1,0 +1,306 @@
+<UserControl x:Class="BusinessManager.App.Views.Settings.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             d:DesignHeight="800" d:DesignWidth="1200"
+             Loaded="SettingsView_Loaded">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <materialDesign:ColorZone Grid.Row="0" 
+                                  Mode="PrimaryMid" 
+                                  Padding="16"
+                                  Margin="0,0,0,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Grid.Column="0"
+                           Text="Settings &amp; Configuration"
+                           Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                           Foreground="White"/>
+                
+                <StackPanel Grid.Column="1" 
+                            Orientation="Horizontal">
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            Command="{Binding RefreshCommand}"
+                            Foreground="White"
+                            Margin="0,0,8,0">
+                        <materialDesign:PackIcon Kind="Refresh"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </materialDesign:ColorZone>
+        
+        <!-- Main Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- Business Settings -->
+                <materialDesign:Card Margin="0,0,0,16">
+                    <Grid Margin="16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock Grid.Row="0"
+                                   Text="Business Information"
+                                   Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                   Margin="0,0,0,16"/>
+                        
+                        <TextBox Grid.Row="1"
+                                 materialDesign:HintAssist.Hint="Business Name"
+                                 Text="{Binding BusinessName}"
+                                 Margin="0,0,0,8"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        
+                        <TextBox Grid.Row="2"
+                                 materialDesign:HintAssist.Hint="Business Address"
+                                 Text="{Binding BusinessAddress}"
+                                 Margin="0,0,0,8"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        
+                        <TextBox Grid.Row="3"
+                                 materialDesign:HintAssist.Hint="Business Phone"
+                                 Text="{Binding BusinessPhone}"
+                                 Margin="0,0,0,8"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        
+                        <TextBox Grid.Row="4"
+                                 materialDesign:HintAssist.Hint="Business Email"
+                                 Text="{Binding BusinessEmail}"
+                                 Margin="0,0,0,8"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        
+                        <Grid Grid.Row="5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <TextBox Grid.Column="0"
+                                     materialDesign:HintAssist.Hint="Tax Rate (%)"
+                                     Text="{Binding TaxRate}"
+                                     Margin="0,0,8,0"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                            
+                            <TextBox Grid.Column="1"
+                                     materialDesign:HintAssist.Hint="Low Stock Threshold"
+                                     Text="{Binding LowStockThreshold}"
+                                     Margin="8,0,0,0"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        </Grid>
+                        
+                        <Button Grid.Row="6"
+                                Content="Save Business Settings"
+                                Command="{Binding SaveBusinessSettingsCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Margin="0,16,0,0"/>
+                    </Grid>
+                </materialDesign:Card>
+                
+                <!-- Price Management -->
+                <materialDesign:Card Margin="0,0,0,16">
+                    <Grid Margin="16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock Grid.Row="0"
+                                   Text="Price Management"
+                                   Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                   Margin="0,0,0,16"/>
+                        
+                        <TabControl Grid.Row="1">
+                            <!-- Service Items -->
+                            <TabItem Header="Service Items">
+                                <Grid Margin="8">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <TextBlock Grid.Row="0"
+                                               Text="Manage service item prices"
+                                               Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                               Margin="0,0,0,8"/>
+                                    
+                                    <DataGrid Grid.Row="1"
+                                              ItemsSource="{Binding ServiceItems}"
+                                              SelectedItem="{Binding SelectedServiceItem}"
+                                              Style="{StaticResource MaterialDesignDataGrid}"
+                                              AutoGenerateColumns="False"
+                                              CanUserAddRows="False"
+                                              IsReadOnly="True"
+                                              GridLinesVisibility="Horizontal"
+                                              HeadersVisibility="Column"
+                                              Height="200">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Name" 
+                                                                Binding="{Binding Name}"
+                                                                Width="200"/>
+                                            <DataGridTextColumn Header="Category" 
+                                                                Binding="{Binding Category}"
+                                                                Width="120"/>
+                                            <DataGridTextColumn Header="Price" 
+                                                                Binding="{Binding Price, StringFormat='{}{0:N0}'}"
+                                                                Width="100"/>
+                                            <DataGridTextColumn Header="Description" 
+                                                                Binding="{Binding Description}"
+                                                                Width="200"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
+                            </TabItem>
+                            
+                            <!-- Products -->
+                            <TabItem Header="Products">
+                                <Grid Margin="8">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <TextBlock Grid.Row="0"
+                                               Text="Manage product prices"
+                                               Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                               Margin="0,0,0,8"/>
+                                    
+                                    <DataGrid Grid.Row="1"
+                                              ItemsSource="{Binding Products}"
+                                              SelectedItem="{Binding SelectedProduct}"
+                                              Style="{StaticResource MaterialDesignDataGrid}"
+                                              AutoGenerateColumns="False"
+                                              CanUserAddRows="False"
+                                              IsReadOnly="True"
+                                              GridLinesVisibility="Horizontal"
+                                              HeadersVisibility="Column"
+                                              Height="200">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Name" 
+                                                                Binding="{Binding Name}"
+                                                                Width="200"/>
+                                            <DataGridTextColumn Header="Selling Price" 
+                                                                Binding="{Binding SellingPrice, StringFormat='{}{0:N0}'}"
+                                                                Width="100"/>
+                                            <DataGridTextColumn Header="Cost Price" 
+                                                                Binding="{Binding CostPrice, StringFormat='{}{0:N0}'}"
+                                                                Width="100"/>
+                                            <DataGridTextColumn Header="Stock" 
+                                                                Binding="{Binding CurrentStock}"
+                                                                Width="80"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
+                            </TabItem>
+                        </TabControl>
+                    </Grid>
+                </materialDesign:Card>
+                
+                <!-- System Settings -->
+                <materialDesign:Card Margin="0,0,0,16">
+                    <Grid Margin="16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock Grid.Row="0"
+                                   Text="System Settings"
+                                   Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                   Margin="0,0,0,16"/>
+                        
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <TextBox Grid.Column="0"
+                                     materialDesign:HintAssist.Hint="Setting Key"
+                                     Text="{Binding NewSettingKey}"
+                                     Margin="0,0,8,0"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                            
+                            <TextBox Grid.Column="1"
+                                     materialDesign:HintAssist.Hint="Setting Value"
+                                     Text="{Binding NewSettingValue}"
+                                     Margin="8,0,8,0"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                            
+                            <TextBox Grid.Column="2"
+                                     materialDesign:HintAssist.Hint="Category"
+                                     Text="{Binding NewSettingCategory}"
+                                     Margin="8,0,0,0"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        </Grid>
+                        
+                        <Button Grid.Row="2"
+                                Content="Add Setting"
+                                Command="{Binding SaveSettingCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Margin="0,8,0,16"/>
+                        
+                        <DataGrid Grid.Row="3"
+                                  ItemsSource="{Binding Settings}"
+                                  SelectedItem="{Binding SelectedSetting}"
+                                  Style="{StaticResource MaterialDesignDataGrid}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True"
+                                  GridLinesVisibility="Horizontal"
+                                  HeadersVisibility="Column"
+                                  Height="200">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Key" 
+                                                    Binding="{Binding Key}"
+                                                    Width="150"/>
+                                <DataGridTextColumn Header="Value" 
+                                                    Binding="{Binding Value}"
+                                                    Width="200"/>
+                                <DataGridTextColumn Header="Category" 
+                                                    Binding="{Binding Category}"
+                                                    Width="120"/>
+                                <DataGridTextColumn Header="Description" 
+                                                    Binding="{Binding Description}"
+                                                    Width="200"/>
+                                <DataGridTemplateColumn Header="Actions" Width="80">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                    Command="{Binding DataContext.DeleteSettingCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Delete Setting">
+                                                <materialDesign:PackIcon Kind="Delete"/>
+                                            </Button>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </materialDesign:Card>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

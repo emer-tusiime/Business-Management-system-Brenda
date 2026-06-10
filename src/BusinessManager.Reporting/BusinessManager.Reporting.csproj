@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>BusinessManager.Reporting</RootNamespace>
+    <AssemblyName>BusinessManager.Reporting</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="QuestPDF" Version="2023.12.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BusinessManager.Application\BusinessManager.Application.csproj" />
+    <ProjectReference Include="..\BusinessManager.Domain\BusinessManager.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,330 @@
+<UserControl x:Class="BusinessManager.App.Views.Sales.SalesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             d:DesignHeight="800" d:DesignWidth="1200"
+             Loaded="SalesView_Loaded">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <materialDesign:ColorZone Grid.Row="0" 
+                                  Mode="PrimaryMid" 
+                                  Padding="16"
+                                  Margin="0,0,0,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Grid.Column="0"
+                           Text="Sales Management"
+                           Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                           Foreground="White"/>
+                
+                <StackPanel Grid.Column="1" 
+                            Orientation="Horizontal">
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            Command="{Binding RefreshCommand}"
+                            Foreground="White"
+                            Margin="0,0,8,0">
+                        <materialDesign:PackIcon Kind="Refresh"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </materialDesign:ColorZone>
+        
+        <!-- Main Content -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Left: Sales List -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
+                <!-- Filters -->
+                <materialDesign:Card Grid.Row="0" Margin="0,0,0,8">
+                    <Grid Margin="16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <DatePicker Grid.Column="0"
+                                        materialDesign:HintAssist.Hint="Start Date"
+                                        SelectedDate="{Binding FilterStartDate}"
+                                        Margin="0,0,8,0"
+                                        Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
+                            
+                            <DatePicker Grid.Column="1"
+                                        materialDesign:HintAssist.Hint="End Date"
+                                        SelectedDate="{Binding FilterEndDate}"
+                                        Margin="8,0,8,0"
+                                        Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
+                            
+                            <Button Grid.Column="2"
+                                    Content="Filter"
+                                    Command="{Binding SearchCommand}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"/>
+                        </Grid>
+                        
+                        <TextBox Grid.Row="1"
+                                 materialDesign:HintAssist.Hint="Search by receipt, customer, or user..."
+                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,8,0,0"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                    </Grid>
+                </materialDesign:Card>
+                
+                <!-- Sales DataGrid -->
+                <materialDesign:Card Grid.Row="1">
+                    <DataGrid ItemsSource="{Binding Sales}"
+                              SelectedItem="{Binding SelectedSale}"
+                              Style="{StaticResource MaterialDesignDataGrid}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              IsReadOnly="True"
+                              GridLinesVisibility="Horizontal"
+                              HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Receipt #" 
+                                                Binding="{Binding ReceiptNumber}"
+                                                Width="120"/>
+                            <DataGridTextColumn Header="Date" 
+                                                Binding="{Binding SaleDate, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"
+                                                Width="140"/>
+                            <DataGridTextColumn Header="Customer" 
+                                                Binding="{Binding CustomerName}"
+                                                Width="150"/>
+                            <DataGridTextColumn Header="User" 
+                                                Binding="{Binding UserName}"
+                                                Width="120"/>
+                            <DataGridTextColumn Header="Total" 
+                                                Binding="{Binding TotalAmount, StringFormat='{}{0:N0}'}"
+                                                Width="100">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTemplateColumn Header="Actions" Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                Command="{Binding DataContext.DeleteSaleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip="Delete Sale">
+                                            <materialDesign:PackIcon Kind="Delete"/>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </materialDesign:Card>
+            </Grid>
+            
+            <!-- Splitter -->
+            <GridSplitter Grid.Column="1" 
+                          HorizontalAlignment="Stretch" 
+                          Background="LightGray"/>
+            
+            <!-- Right: New Sale -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <!-- New Sale Header -->
+                <materialDesign:Card Grid.Row="0" Margin="0,0,0,8">
+                    <StackPanel Margin="16">
+                        <TextBlock Text="New Sale"
+                                   Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
+                        <TextBlock Text="Add items and complete sale"
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                   Opacity="0.7"/>
+                    </StackPanel>
+                </materialDesign:Card>
+                
+                <!-- Items Selection -->
+                <materialDesign:Card Grid.Row="1" Margin="0,0,0,8">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16">
+                            <!-- Services -->
+                            <TextBlock Text="Services"
+                                       Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                                       Margin="0,0,0,8"/>
+                            
+                            <ItemsControl ItemsSource="{Binding ServiceItems}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                HorizontalAlignment="Stretch"
+                                                HorizontalContentAlignment="Left"
+                                                Margin="0,2"
+                                                Command="{Binding DataContext.AddServiceItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Name}" 
+                                                           FontWeight="Medium"/>
+                                                <TextBlock Text="{Binding DefaultPrice, StringFormat=' - {0:N0}'}" 
+                                                           Opacity="0.7"
+                                                           Margin="8,0,0,0"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            
+                            <!-- Products -->
+                            <TextBlock Text="Products"
+                                       Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                                       Margin="0,16,0,8"/>
+                            
+                            <ItemsControl ItemsSource="{Binding Products}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                HorizontalAlignment="Stretch"
+                                                HorizontalContentAlignment="Left"
+                                                Margin="0,2"
+                                                Command="{Binding DataContext.AddProductCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Name}" 
+                                                           FontWeight="Medium"/>
+                                                <TextBlock Text="{Binding CurrentStock, StringFormat=' (Stock: {0})'}" 
+                                                           Opacity="0.5"
+                                                           Margin="8,0,0,0"/>
+                                                <TextBlock Text="{Binding SellingPrice, StringFormat=' - {0:N0}'}" 
+                                                           Opacity="0.7"
+                                                           Margin="8,0,0,0"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </materialDesign:Card>
+                
+                <!-- Sale Summary -->
+                <materialDesign:Card Grid.Row="2">
+                    <Grid Margin="16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Current Items -->
+                        <TextBlock Grid.Row="0" 
+                                   Text="Current Items"
+                                   Style="{StaticResource MaterialDesignSubtitle2TextBlock}"
+                                   Margin="0,0,0,8"/>
+                        
+                        <ListBox Grid.Row="1"
+                                 ItemsSource="{Binding CurrentSaleItems}"
+                                 SelectedItem="{Binding SelectedSaleItem}"
+                                 Height="120"
+                                 Margin="0,0,0,16">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="{Binding Description}" FontWeight="Medium"/>
+                                            <TextBlock Text="{Binding Quantity, StringFormat='Qty: {0}'}" 
+                                                       Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                                       Opacity="0.7"/>
+                                        </StackPanel>
+                                        
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding UnitPrice, StringFormat='{}{0:N0}'}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="8,0"/>
+                                        
+                                        <Button Grid.Column="2"
+                                                Style="{StaticResource MaterialDesignIconButton}"
+                                                Command="{Binding DataContext.RemoveSaleItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip="Remove Item">
+                                            <materialDesign:PackIcon Kind="Close"/>
+                                        </Button>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        
+                        <!-- Customer (optional) -->
+                        <TextBox Grid.Row="2"
+                                 materialDesign:HintAssist.Hint="Customer Name (optional)"
+                                 Text="{Binding CustomerName}"
+                                 Margin="0,0,0,8"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        
+                        <!-- Total -->
+                        <Grid Grid.Row="3" Margin="0,8,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Total Received:"
+                                       FontWeight="Bold"
+                                       FontSize="16"
+                                       VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding TotalAmount, StringFormat='{}{0:N0} UGX'}"
+                                       FontWeight="Bold"
+                                       FontSize="20"
+                                       Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                        </Grid>
+                        
+                        <!-- Action Buttons -->
+                        <StackPanel Grid.Row="4" Orientation="Horizontal">
+                            <Button Content="Clear"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Command="{Binding ClearSaleCommand}"
+                                    Margin="0,0,8,0"/>
+                            <Button Content="Save &amp; Next Client"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Command="{Binding SaveSaleCommand}"/>
+                        </StackPanel>
+                    </Grid>
+                </materialDesign:Card>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

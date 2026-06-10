@@ -1,0 +1,344 @@
+<UserControl x:Class="BusinessManager.App.Views.Dashboard.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+             mc:Ignorable="d" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             d:DesignHeight="800" d:DesignWidth="1000">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="Dashboard"
+                           Style="{StaticResource MaterialDesignHeadline5TextBlock}"/>
+                <TextBlock Text="{Binding LastUpdated, StringFormat='Last updated: {0}'}"
+                           Style="{StaticResource MaterialDesignBody2TextBlock}"
+                           Opacity="0.7"/>
+            </StackPanel>
+            
+            <!-- Refresh Button -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Command="{Binding LoadDataCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Refresh" 
+                                                Margin="0,0,8,0"/>
+                        <TextBlock Text="Refresh"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+        
+        <!-- Summary Cards -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- Today's Summary -->
+                <TextBlock Text="Today's Summary"
+                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                           Margin="0,0,0,16"/>
+                
+                <Grid Margin="0,0,0,24">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Today Income -->
+                    <materialDesign:Card Grid.Column="0" 
+                                         Margin="0,0,8,0"
+                                         Background="LightBlue">
+                        <StackPanel Margin="16">
+                            <materialDesign:PackIcon Kind="TrendingUp" 
+                                                    Width="24" Height="24"
+                                                    Margin="0,0,0,8"/>
+                            <TextBlock Text="Received Today"
+                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                       Opacity="0.8"/>
+                            <TextBlock Text="{Binding Summary.TodayIncome, StringFormat='{}{0:N0} UGX'}"
+                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
+                        </StackPanel>
+                    </materialDesign:Card>
+                    
+                    <!-- Today Expenses -->
+                    <materialDesign:Card Grid.Column="1" 
+                                         Margin="8,0,8,0"
+                                         Background="LightCoral">
+                        <StackPanel Margin="16">
+                            <materialDesign:PackIcon Kind="TrendingDown" 
+                                                    Width="24" Height="24"
+                                                    Margin="0,0,0,8"/>
+                            <TextBlock Text="Expenses Today"
+                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                       Opacity="0.8"/>
+                            <TextBlock Text="{Binding Summary.TodayExpenses, StringFormat='{}{0:N0} UGX'}"
+                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
+                        </StackPanel>
+                    </materialDesign:Card>
+                    
+                    <!-- Cash in Drawer -->
+                    <materialDesign:Card Grid.Column="2" 
+                                         Margin="8,0,8,0"
+                                         Background="Gold">
+                        <StackPanel Margin="16">
+                            <materialDesign:PackIcon Kind="CashRegister" 
+                                                    Width="24" Height="24"
+                                                    Margin="0,0,0,8"/>
+                            <TextBlock Text="Cash in Drawer"
+                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                       Opacity="0.8"/>
+                            <TextBlock Text="{Binding Summary.DrawerBalance, StringFormat='{}{0:N0} UGX'}"
+                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
+                            <Button Command="{Binding SetDrawerOpeningBalanceCommand}"
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    Margin="0,8,0,0"
+                                    Padding="0"
+                                    HorizontalAlignment="Left">
+                                <TextBlock Text="Set opening cash"
+                                           Style="{StaticResource MaterialDesignCaptionTextBlock}"/>
+                            </Button>
+                        </StackPanel>
+                    </materialDesign:Card>
+                    
+                    <!-- Today Profit -->
+                    <materialDesign:Card Grid.Column="3" 
+                                         Margin="8,0,0,0"
+                                         Background="LightGreen">
+                        <StackPanel Margin="16">
+                            <materialDesign:PackIcon Kind="Cash" 
+                                                    Width="24" Height="24"
+                                                    Margin="0,0,0,8"/>
+                            <TextBlock Text="Profit Today"
+                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                       Opacity="0.8"/>
+                            <TextBlock Text="{Binding Summary.TodayProfit, StringFormat='{}{0:N0} UGX'}"
+                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
+                        </StackPanel>
+                    </materialDesign:Card>
+                </Grid>
+                
+                <!-- Weekly Summary -->
+                <TextBlock Text="This Week's Summary"
+                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                           Margin="0,0,0,16"/>
+                
+                <Grid Margin="0,0,0,24">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <materialDesign:Card Grid.Column="0" 
+                                         Margin="0,0,8,0"
+                                         Background="LightBlue">
+                        <StackPanel Margin="16">
+                            <materialDesign:PackIcon Kind="CalendarWeek" 
+                                                    Width="24" Height="24"
+                                                    Margin="0,0,0,8"/>
+                            <TextBlock Text="Income This Week"
+                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                       Opacity="0.8"/>
+                            <TextBlock Text="{Binding Summary.ThisWeekIncome, StringFormat='{}{0:N0} UGX'}"
+                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
+                        </StackPanel>
+                    </materialDesign:Card>
+                    
+                    <materialDesign:Card Grid.Column="1" 
+                                         Margin="8,0,8,0"
+                                         Background="LightCoral">
+                        <StackPanel Margin="16">
+                            <materialDesign:PackIcon Kind="Receipt" 
+                                                    Width="24" Height="24"
+                                                    Margin="0,0,0,8"/>
+                            <TextBlock Text="Expenses This Week"
+                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                       Opacity="0.8"/>
+                            <TextBlock Text="{Binding Summary.ThisWeekExpenses, StringFormat='{}{0:N0} UGX'}"
+                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
+                        </StackPanel>
+                    </materialDesign:Card>
+                    
+                    <materialDesign:Card Grid.Column="2" 
+                                         Margin="8,0,0,0"
+                                         Background="LightGreen">
+                        <StackPanel Margin="16">
+                            <materialDesign:PackIcon Kind="Cash" 
+                                                    Width="24" Height="24"
+                                                    Margin="0,0,0,8"/>
+                            <TextBlock Text="Profit This Week"
+                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                       Opacity="0.8"/>
+                            <TextBlock Text="{Binding Summary.ThisWeekProfit, StringFormat='{}{0:N0} UGX'}"
+                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
+                        </StackPanel>
+                    </materialDesign:Card>
+                </Grid>
+                
+                <!-- Monthly Summary -->
+                <TextBlock Text="Monthly Summary"
+                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                           Margin="0,0,0,16"/>
+                
+                <Grid Margin="0,0,0,24">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- This Month Income -->
+                    <materialDesign:Card Grid.Column="0" 
+                                         Margin="0,0,8,0"
+                                         Background="LightBlue">
+                        <StackPanel Margin="16">
+                            <materialDesign:PackIcon Kind="CalendarMonth" 
+                                                    Width="24" Height="24"
+                                                    Margin="0,0,0,8"/>
+                            <TextBlock Text="Income"
+                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                       Opacity="0.8"/>
+                            <TextBlock Text="{Binding Summary.ThisMonthIncome, StringFormat='{}{0:N0}'}"
+                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
+                        </StackPanel>
+                    </materialDesign:Card>
+                    
+                    <!-- This Month Expenses -->
+                    <materialDesign:Card Grid.Column="1" 
+                                         Margin="8,0,8,0"
+                                         Background="LightCoral">
+                        <StackPanel Margin="16">
+                            <materialDesign:PackIcon Kind="Receipt" 
+                                                    Width="24" Height="24"
+                                                    Margin="0,0,0,8"/>
+                            <TextBlock Text="Expenses"
+                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                       Opacity="0.8"/>
+                            <TextBlock Text="{Binding Summary.ThisMonthExpenses, StringFormat='{}{0:N0}'}"
+                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
+                        </StackPanel>
+                    </materialDesign:Card>
+                    
+                    <!-- This Month Profit -->
+                    <materialDesign:Card Grid.Column="2" 
+                                         Margin="8,0,0,0"
+                                         Background="LightGreen">
+                        <StackPanel Margin="16">
+                            <materialDesign:PackIcon Kind="Cash" 
+                                                    Width="24" Height="24"
+                                                    Margin="0,0,0,8"/>
+                            <TextBlock Text="Profit"
+                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                       Opacity="0.8"/>
+                            <TextBlock Text="{Binding Summary.ThisMonthProfit, StringFormat='{}{0:N0}'}"
+                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
+                        </StackPanel>
+                    </materialDesign:Card>
+                </Grid>
+                
+                <!-- Charts Section -->
+                <TextBlock Text="Analytics &amp; Insights"
+                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                           Margin="0,0,0,16"/>
+                
+                <Grid Margin="0,0,0,24">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Income by Module Chart -->
+                    <materialDesign:Card Grid.Column="0" 
+                                         Margin="0,0,8,0">
+                        <StackPanel Margin="16">
+                            <TextBlock Text="Income by Module"
+                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                       Margin="0,0,0,16"/>
+                            
+                            <lvc:PieChart 
+                                Series="{Binding IncomeByModuleSeries}"
+                                Width="300"
+                                Height="250"
+                                LegendPosition="Bottom"/>
+                        </StackPanel>
+                    </materialDesign:Card>
+                    
+                    <!-- Monthly Trend Chart -->
+                    <materialDesign:Card Grid.Column="1" 
+                                         Margin="8,0,0,0">
+                        <StackPanel Margin="16">
+                            <TextBlock Text="Monthly Trend"
+                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                       Margin="0,0,0,16"/>
+                            
+                            <lvc:CartesianChart 
+                                Series="{Binding MonthlyTrendSeries}"
+                                Width="300"
+                                Height="250"
+                                XAxes="{Binding MonthlyTrendXAxes}"
+                                YAxes="{Binding MonthlyTrendYAxes}"
+                                LegendPosition="Bottom"/>
+                        </StackPanel>
+                    </materialDesign:Card>
+                </Grid>
+                
+                <!-- Quick Actions -->
+                <TextBlock Text="Quick Actions"
+                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                           Margin="0,24,0,16"/>
+                
+                <WrapPanel>
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                            Margin="0,0,8,8">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="PointOfSale" 
+                                                    Margin="0,0,8,0"/>
+                            <TextBlock Text="New Sale"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                            Margin="0,0,8,8">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Receipt" 
+                                                    Margin="0,0,8,0"/>
+                            <TextBlock Text="Add Expense"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                            Margin="0,0,8,8">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FileChart" 
+                                                    Margin="0,0,8,0"/>
+                            <TextBlock Text="Reports"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                            Margin="0,0,8,8">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="PackageVariant" 
+                                                    Margin="0,0,8,0"/>
+                            <TextBlock Text="Inventory"/>
+                        </StackPanel>
+                    </Button>
+                </WrapPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
