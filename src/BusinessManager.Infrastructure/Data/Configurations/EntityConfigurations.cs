@@ -436,3 +436,48 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
+
+public class DebtorConfiguration : IEntityTypeConfiguration<Debtor>
+{
+    public void Configure(EntityTypeBuilder<Debtor> builder)
+    {
+        builder.ToTable("Debtors");
+
+        builder.HasKey(d => d.Id);
+
+        builder.Property(d => d.CustomerName).IsRequired().HasMaxLength(100);
+        builder.Property(d => d.Phone).HasMaxLength(20);
+        builder.Property(d => d.Description).IsRequired().HasMaxLength(200);
+        builder.Property(d => d.TotalAmount).HasPrecision(18, 2);
+        builder.Property(d => d.AmountPaid).HasPrecision(18, 2);
+        builder.Property(d => d.Notes).HasMaxLength(500);
+        builder.Ignore(d => d.Balance);
+
+        builder.HasOne(d => d.User)
+            .WithMany()
+            .HasForeignKey(d => d.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(d => d.Payments)
+            .WithOne(p => p.Debtor)
+            .HasForeignKey(p => p.DebtorId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public class DebtPaymentConfiguration : IEntityTypeConfiguration<DebtPayment>
+{
+    public void Configure(EntityTypeBuilder<DebtPayment> builder)
+    {
+        builder.ToTable("DebtPayments");
+
+        builder.HasKey(p => p.Id);
+        builder.Property(p => p.Amount).HasPrecision(18, 2);
+        builder.Property(p => p.Notes).HasMaxLength(500);
+
+        builder.HasOne(p => p.User)
+            .WithMany()
+            .HasForeignKey(p => p.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}

@@ -62,6 +62,7 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         
                         <Grid Grid.Row="0">
@@ -94,6 +95,30 @@
                                  Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                                  Margin="0,8,0,0"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                        <Border Grid.Row="2"
+                                Background="{DynamicResource MaterialDesignDividerBackground}"
+                                CornerRadius="4"
+                                Padding="12"
+                                Margin="0,8,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="{Binding HistoryTransactionCount, StringFormat='Transactions: {0}'}"
+                                               Style="{StaticResource MaterialDesignBody2TextBlock}"/>
+                                    <TextBlock Text="Total for selected dates"
+                                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                               Opacity="0.7"/>
+                                </StackPanel>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding HistoryTotalAmount, StringFormat='{}{0:N0} UGX'}"
+                                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
                     </Grid>
                 </materialDesign:Card>
                 
@@ -272,7 +297,7 @@
                                         </StackPanel>
                                         
                                         <TextBlock Grid.Column="1"
-                                                   Text="{Binding UnitPrice, StringFormat='{}{0:N0}'}"
+                                                   Text="{Binding TotalPrice, StringFormat='{}{0:N0}'}"
                                                    VerticalAlignment="Center"
                                                    Margin="8,0"/>
                                         
@@ -301,7 +326,7 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Total Received:"
+                            <TextBlock Text="Total Made:"
                                        FontWeight="Bold"
                                        FontSize="16"
                                        VerticalAlignment="Center"/>

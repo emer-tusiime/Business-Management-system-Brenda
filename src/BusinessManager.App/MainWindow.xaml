@@ -94,6 +94,19 @@
                             <TextBlock Text="Expenses"/>
                         </StackPanel>
                     </Button>
+
+                    <!-- Debtors -->
+                    <Button Style="{StaticResource MaterialDesignFlatButton}"
+                            Click="NavigateToDebtors"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Margin="4">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AccountCash"
+                                                   Margin="0,0,16,0"/>
+                            <TextBlock Text="Debtors"/>
+                        </StackPanel>
+                    </Button>
                     
                     <!-- Inventory -->
                     <Button Style="{StaticResource MaterialDesignFlatButton}"

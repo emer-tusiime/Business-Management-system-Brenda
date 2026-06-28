@@ -23,7 +23,10 @@ public class ExpenseService : IExpenseService
     {
         try
         {
-            expense.CreatedAt = DateTime.UtcNow;
+            if (expense.ExpenseDate == default)
+                expense.ExpenseDate = DateTime.Now;
+
+            expense.CreatedAt = DateTime.Now;
             var createdExpense = await _expenseRepository.AddAsync(expense);
             
             _logger.LogInformation("Expense created successfully with ID {ExpenseId}", createdExpense.Id);
@@ -66,7 +69,7 @@ public class ExpenseService : IExpenseService
     {
         try
         {
-            expense.UpdatedAt = DateTime.UtcNow;
+            expense.UpdatedAt = DateTime.Now;
             var updatedExpense = await _expenseRepository.UpdateAsync(expense);
             
             _logger.LogInformation("Expense {ExpenseId} updated successfully", expense.Id);

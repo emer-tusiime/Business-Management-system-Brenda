@@ -19,17 +19,20 @@ public static class DependencyInjection
         }
 
         services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlite(connectionString));
+            options.UseSqlite(connectionString), ServiceLifetime.Singleton, ServiceLifetime.Singleton);
 
-        services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IServiceItemRepository, ServiceItemRepository>();
-        services.AddScoped<IProductRepository, ProductRepository>();
-        services.AddScoped<ISaleRepository, SaleRepository>();
-        services.AddScoped<IExpenseRepository, ExpenseRepository>();
-        services.AddScoped<IExpenseCategoryRepository, ExpenseCategoryRepository>();
-        services.AddScoped<IInventoryMovementRepository, InventoryMovementRepository>();
-        services.AddScoped<ISettingRepository, SettingRepository>();
-        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+        services.AddSingleton<IUserRepository, UserRepository>();
+        services.AddSingleton<IServiceItemRepository, ServiceItemRepository>();
+        services.AddSingleton<IProductRepository, ProductRepository>();
+        services.AddSingleton<ISaleRepository, SaleRepository>();
+        services.AddSingleton<ISaleItemRepository, SaleItemRepository>();
+        services.AddSingleton<IExpenseRepository, ExpenseRepository>();
+        services.AddSingleton<IDebtorRepository, DebtorRepository>();
+        services.AddSingleton<IExpenseCategoryRepository, ExpenseCategoryRepository>();
+        services.AddSingleton<IInventoryMovementRepository, InventoryMovementRepository>();
+        services.AddSingleton<ISettingRepository, SettingRepository>();
+        services.AddSingleton<IPriceHistoryRepository, PriceHistoryRepository>();
+        services.AddSingleton<IAuditLogRepository, AuditLogRepository>();
 
         return services;
     }

@@ -97,9 +97,8 @@
                             </Grid.ColumnDefinitions>
                             
                             <ComboBox Grid.Column="0"
-                                      materialDesign:HintAssist.Hint="Category"
+                                      materialDesign:HintAssist.Hint="Filter by category"
                                       ItemsSource="{Binding ExpenseCategories}"
-                                      SelectedItem="{Binding SelectedCategory}"
                                       SelectedValue="{Binding FilterCategoryId}"
                                       SelectedValuePath="Id"
                                       DisplayMemberPath="Name"
@@ -108,7 +107,7 @@
                             
                             <Button Grid.Column="1"
                                     Content="Clear"
-                                    Command="{Binding CancelEditCommand}"
+                                    Command="{Binding ClearFiltersCommand}"
                                     Style="{StaticResource MaterialDesignOutlinedButton}"/>
                         </Grid>
                         
@@ -230,7 +229,7 @@
                         <!-- Amount -->
                         <TextBox Grid.Row="3"
                                  materialDesign:HintAssist.Hint="Amount"
-                                 Text="{Binding Amount}"
+                                 Text="{Binding Amount, Converter={StaticResource CurrencyConverter}, UpdateSourceTrigger=PropertyChanged}"
                                  Margin="0,0,0,8"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
                         

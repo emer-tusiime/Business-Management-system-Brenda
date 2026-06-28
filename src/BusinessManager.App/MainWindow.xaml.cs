@@ -93,12 +93,12 @@ public partial class MainWindow : Window
         }
     }
 
-    private void NavigateToDashboard(object? sender, RoutedEventArgs? e)
+    internal void NavigateToDashboard(object? sender, RoutedEventArgs? e)
     {
         _navigationService.NavigateTo<Views.Dashboard.DashboardView>();
     }
 
-    private void NavigateToSales(object? sender, RoutedEventArgs? e)
+    internal void NavigateToSales(object? sender, RoutedEventArgs? e)
     {
         // Create SalesViewModel with current user
         var salesViewModel = new ViewModels.SalesViewModel(
@@ -119,7 +119,7 @@ public partial class MainWindow : Window
         MainContent.Content = salesView;
     }
 
-    private void NavigateToExpenses(object? sender, RoutedEventArgs? e)
+    internal void NavigateToExpenses(object? sender, RoutedEventArgs? e)
     {
         // Create ExpensesViewModel with current user
         var expensesViewModel = new ViewModels.ExpensesViewModel(
@@ -138,7 +138,23 @@ public partial class MainWindow : Window
         MainContent.Content = expensesView;
     }
 
-    private void NavigateToInventory(object? sender, RoutedEventArgs? e)
+    internal void NavigateToDebtors(object? sender, RoutedEventArgs? e)
+    {
+        var debtorsViewModel = new ViewModels.DebtorsViewModel(
+            _serviceProvider.GetRequiredService<IDebtorService>(),
+            _serviceProvider.GetRequiredService<INotificationService>(),
+            _serviceProvider.GetRequiredService<IDialogService>(),
+            _serviceProvider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<BusinessManager.App.ViewModels.DebtorsViewModel>>(),
+            _currentUser!
+        );
+
+        MainContent.Content = new Views.Debtors.DebtorsView
+        {
+            DataContext = debtorsViewModel
+        };
+    }
+
+    internal void NavigateToInventory(object? sender, RoutedEventArgs? e)
     {
         // Create InventoryViewModel with current user
         var inventoryViewModel = new ViewModels.InventoryViewModel(
@@ -157,7 +173,7 @@ public partial class MainWindow : Window
         MainContent.Content = inventoryView;
     }
 
-    private void NavigateToReports(object? sender, RoutedEventArgs? e)
+    internal void NavigateToReports(object? sender, RoutedEventArgs? e)
     {
         _navigationService.NavigateTo<Views.Reports.ReportsView>();
     }

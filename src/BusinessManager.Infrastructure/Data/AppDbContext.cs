@@ -23,6 +23,8 @@ public class AppDbContext : DbContext
     public DbSet<SaleItem> SaleItems { get; set; }
     public DbSet<ExpenseCategory> ExpenseCategories { get; set; }
     public DbSet<Expense> Expenses { get; set; }
+    public DbSet<Debtor> Debtors { get; set; }
+    public DbSet<DebtPayment> DebtPayments { get; set; }
     public DbSet<InventoryMovement> InventoryMovements { get; set; }
     public DbSet<Setting> Settings { get; set; }
     public DbSet<PriceHistory> PriceHistory { get; set; }
@@ -40,6 +42,8 @@ public class AppDbContext : DbContext
         modelBuilder.ApplyConfiguration(new SaleItemConfiguration());
         modelBuilder.ApplyConfiguration(new ExpenseCategoryConfiguration());
         modelBuilder.ApplyConfiguration(new ExpenseConfiguration());
+        modelBuilder.ApplyConfiguration(new DebtorConfiguration());
+        modelBuilder.ApplyConfiguration(new DebtPaymentConfiguration());
         modelBuilder.ApplyConfiguration(new InventoryMovementConfiguration());
         modelBuilder.ApplyConfiguration(new SettingConfiguration());
         modelBuilder.ApplyConfiguration(new PriceHistoryConfiguration());

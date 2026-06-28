@@ -55,7 +55,6 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     
                     <!-- Today Income -->
@@ -66,11 +65,15 @@
                             <materialDesign:PackIcon Kind="TrendingUp" 
                                                     Width="24" Height="24"
                                                     Margin="0,0,0,8"/>
-                            <TextBlock Text="Received Today"
+                            <TextBlock Text="Total Made Today"
                                        Style="{StaticResource MaterialDesignBody2TextBlock}"
                                        Opacity="0.8"/>
                             <TextBlock Text="{Binding Summary.TodayIncome, StringFormat='{}{0:N0} UGX'}"
                                        Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
+                            <TextBlock Text="All sales recorded today"
+                                       Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                       Opacity="0.7"
+                                       Margin="0,4,0,0"/>
                         </StackPanel>
                     </materialDesign:Card>
                     
@@ -92,7 +95,7 @@
                     
                     <!-- Cash in Drawer -->
                     <materialDesign:Card Grid.Column="2" 
-                                         Margin="8,0,8,0"
+                                         Margin="8,0,0,0"
                                          Background="Gold">
                         <StackPanel Margin="16">
                             <materialDesign:PackIcon Kind="CashRegister" 
@@ -103,30 +106,10 @@
                                        Opacity="0.8"/>
                             <TextBlock Text="{Binding Summary.DrawerBalance, StringFormat='{}{0:N0} UGX'}"
                                        Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
-                            <Button Command="{Binding SetDrawerOpeningBalanceCommand}"
-                                    Style="{StaticResource MaterialDesignFlatButton}"
-                                    Margin="0,8,0,0"
-                                    Padding="0"
-                                    HorizontalAlignment="Left">
-                                <TextBlock Text="Set opening cash"
-                                           Style="{StaticResource MaterialDesignCaptionTextBlock}"/>
-                            </Button>
-                        </StackPanel>
-                    </materialDesign:Card>
-                    
-                    <!-- Today Profit -->
-                    <materialDesign:Card Grid.Column="3" 
-                                         Margin="8,0,0,0"
-                                         Background="LightGreen">
-                        <StackPanel Margin="16">
-                            <materialDesign:PackIcon Kind="Cash" 
-                                                    Width="24" Height="24"
-                                                    Margin="0,0,0,8"/>
-                            <TextBlock Text="Profit Today"
-                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
-                                       Opacity="0.8"/>
-                            <TextBlock Text="{Binding Summary.TodayProfit, StringFormat='{}{0:N0} UGX'}"
-                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
+                            <TextBlock Text="Sales today minus expenses"
+                                       Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                       Opacity="0.7"
+                                       Margin="0,4,0,0"/>
                         </StackPanel>
                     </materialDesign:Card>
                 </Grid>
@@ -138,7 +121,6 @@
                 
                 <Grid Margin="0,0,0,24">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
@@ -159,7 +141,7 @@
                     </materialDesign:Card>
                     
                     <materialDesign:Card Grid.Column="1" 
-                                         Margin="8,0,8,0"
+                                         Margin="8,0,0,0"
                                          Background="LightCoral">
                         <StackPanel Margin="16">
                             <materialDesign:PackIcon Kind="Receipt" 
@@ -169,21 +151,6 @@
                                        Style="{StaticResource MaterialDesignBody2TextBlock}"
                                        Opacity="0.8"/>
                             <TextBlock Text="{Binding Summary.ThisWeekExpenses, StringFormat='{}{0:N0} UGX'}"
-                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
-                        </StackPanel>
-                    </materialDesign:Card>
-                    
-                    <materialDesign:Card Grid.Column="2" 
-                                         Margin="8,0,0,0"
-                                         Background="LightGreen">
-                        <StackPanel Margin="16">
-                            <materialDesign:PackIcon Kind="Cash" 
-                                                    Width="24" Height="24"
-                                                    Margin="0,0,0,8"/>
-                            <TextBlock Text="Profit This Week"
-                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
-                                       Opacity="0.8"/>
-                            <TextBlock Text="{Binding Summary.ThisWeekProfit, StringFormat='{}{0:N0} UGX'}"
                                        Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
                         </StackPanel>
                     </materialDesign:Card>
@@ -198,10 +165,8 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     
-                    <!-- This Month Income -->
                     <materialDesign:Card Grid.Column="0" 
                                          Margin="0,0,8,0"
                                          Background="LightBlue">
@@ -212,14 +177,13 @@
                             <TextBlock Text="Income"
                                        Style="{StaticResource MaterialDesignBody2TextBlock}"
                                        Opacity="0.8"/>
-                            <TextBlock Text="{Binding Summary.ThisMonthIncome, StringFormat='{}{0:N0}'}"
+                            <TextBlock Text="{Binding Summary.ThisMonthIncome, StringFormat='{}{0:N0} UGX'}"
                                        Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
                         </StackPanel>
                     </materialDesign:Card>
                     
-                    <!-- This Month Expenses -->
                     <materialDesign:Card Grid.Column="1" 
-                                         Margin="8,0,8,0"
+                                         Margin="8,0,0,0"
                                          Background="LightCoral">
                         <StackPanel Margin="16">
                             <materialDesign:PackIcon Kind="Receipt" 
@@ -228,27 +192,38 @@
                             <TextBlock Text="Expenses"
                                        Style="{StaticResource MaterialDesignBody2TextBlock}"
                                        Opacity="0.8"/>
-                            <TextBlock Text="{Binding Summary.ThisMonthExpenses, StringFormat='{}{0:N0}'}"
-                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
-                        </StackPanel>
-                    </materialDesign:Card>
-                    
-                    <!-- This Month Profit -->
-                    <materialDesign:Card Grid.Column="2" 
-                                         Margin="8,0,0,0"
-                                         Background="LightGreen">
-                        <StackPanel Margin="16">
-                            <materialDesign:PackIcon Kind="Cash" 
-                                                    Width="24" Height="24"
-                                                    Margin="0,0,0,8"/>
-                            <TextBlock Text="Profit"
-                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
-                                       Opacity="0.8"/>
-                            <TextBlock Text="{Binding Summary.ThisMonthProfit, StringFormat='{}{0:N0}'}"
+                            <TextBlock Text="{Binding Summary.ThisMonthExpenses, StringFormat='{}{0:N0} UGX'}"
                                        Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
                         </StackPanel>
                     </materialDesign:Card>
                 </Grid>
+
+                <!-- Debtors Summary -->
+                <TextBlock Text="Credit / Debtors"
+                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                           Margin="0,0,0,16"/>
+
+                <materialDesign:Card Margin="0,0,0,24">
+                    <StackPanel Margin="16">
+                        <TextBlock Text="{Binding Summary.TotalOutstandingDebt, StringFormat='Total outstanding credit: {0:N0} UGX'}"
+                                   Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                                   Margin="0,0,0,12"/>
+                        <DataGrid ItemsSource="{Binding Summary.CustomerDebts}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True"
+                                  HeadersVisibility="Column"
+                                  Style="{StaticResource MaterialDesignDataGrid}"
+                                  MaxHeight="200">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Customer" Binding="{Binding CustomerName}" Width="*"/>
+                                <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" Width="120"/>
+                                <DataGridTextColumn Header="Records" Binding="{Binding OpenRecords}" Width="70"/>
+                                <DataGridTextColumn Header="Amount Due" Binding="{Binding TotalOwed, StringFormat='{}{0:N0} UGX'}" Width="140"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </materialDesign:Card>
                 
                 <!-- Charts Section -->
                 <TextBlock Text="Analytics &amp; Insights"
@@ -303,36 +278,40 @@
                 
                 <WrapPanel>
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Margin="0,0,8,8">
+                            Margin="0,0,8,8"
+                            Click="QuickAction_NewSale">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="PointOfSale" 
+                            <materialDesign:PackIcon Kind="PointOfSale"
                                                     Margin="0,0,8,0"/>
                             <TextBlock Text="New Sale"/>
                         </StackPanel>
                     </Button>
-                    
+
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Margin="0,0,8,8">
+                            Margin="0,0,8,8"
+                            Click="QuickAction_AddExpense">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Receipt" 
+                            <materialDesign:PackIcon Kind="Receipt"
                                                     Margin="0,0,8,0"/>
                             <TextBlock Text="Add Expense"/>
                         </StackPanel>
                     </Button>
-                    
+
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Margin="0,0,8,8">
+                            Margin="0,0,8,8"
+                            Click="QuickAction_Reports">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="FileChart" 
+                            <materialDesign:PackIcon Kind="FileChart"
                                                     Margin="0,0,8,0"/>
                             <TextBlock Text="Reports"/>
                         </StackPanel>
                     </Button>
-                    
+
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Margin="0,0,8,8">
+                            Margin="0,0,8,8"
+                            Click="QuickAction_Inventory">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="PackageVariant" 
+                            <materialDesign:PackIcon Kind="PackageVariant"
                                                     Margin="0,0,8,0"/>
                             <TextBlock Text="Inventory"/>
                         </StackPanel>

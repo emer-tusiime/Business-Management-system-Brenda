@@ -1,8 +1,11 @@
+using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
-using System.Collections.ObjectModel;
-using System; using System.Collections.Generic; using System.Threading.Tasks; using CommunityToolkit.Mvvm.ComponentModel; using CommunityToolkit.Mvvm.Input; using Microsoft.Extensions.Logging; using BusinessManager.Domain.Interfaces; using BusinessManager.Domain.Entities; using BusinessManager.Domain.DTOs; using BusinessManager.Domain.Enums; using BusinessManager.Application.Services;
+using BusinessManager.Domain.Interfaces;
 using BusinessManager.Domain.Entities;
 using BusinessManager.Domain.DTOs;
 
@@ -50,7 +53,7 @@ public partial class ExpensesViewModel : ObservableObject
     private DateTime _filterStartDate = DateTime.Today.AddDays(-30);
 
     [ObservableProperty]
-    private DateTime _filterEndDate = DateTime.Today.AddDays(1).AddTicks(-1);
+    private DateTime _filterEndDate = DateTime.Today;
 
     [ObservableProperty]
     private string _searchText = string.Empty;
@@ -77,7 +80,8 @@ public partial class ExpensesViewModel : ObservableObject
         DeleteExpenseCommand = new RelayCommand<ExpenseDto>(async (expense) => await DeleteExpenseAsync(expense));
         CancelEditCommand = new RelayCommand(CancelEdit);
         RefreshCommand = new RelayCommand(async () => await LoadExpensesAsync());
-        SearchCommand = new RelayCommand(async () => await FilterExpensesAsync());
+        SearchCommand = new RelayCommand(async () => await LoadExpensesAsync());
+        ClearFiltersCommand = new RelayCommand(async () => await ClearFiltersAsync());
     }
 
     public IRelayCommand LoadExpensesCommand { get; }
@@ -87,6 +91,7 @@ public partial class ExpensesViewModel : ObservableObject
     public IRelayCommand CancelEditCommand { get; }
     public IRelayCommand RefreshCommand { get; }
     public IRelayCommand SearchCommand { get; }
+    public IRelayCommand ClearFiltersCommand { get; }
 
     public async Task InitializeAsync()
     {
@@ -99,29 +104,29 @@ public partial class ExpensesViewModel : ObservableObject
         try
         {
             IsLoading = true;
-            
-            var expenses = await _expenseService.GetExpensesByDateRangeAsync(FilterStartDate, FilterEndDate);
+
+            var endDate = FilterEndDate.Date.AddDays(1).AddTicks(-1);
+            var expenses = await _expenseService.GetExpensesByDateRangeAsync(FilterStartDate.Date, endDate);
             var expensesDtos = expenses.Select(e => new ExpenseDto
             {
                 Id = e.Id,
                 Description = e.Description,
                 Amount = e.Amount,
-                ExpenseDate = e.CreatedAt,
+                ExpenseDate = e.ExpenseDate,
                 CategoryName = e.ExpenseCategory.Name,
                 UserName = e.User.FullName,
                 Notes = e.Notes ?? ""
             });
 
-            // Apply filters
             if (FilterCategoryId.HasValue)
             {
-                expensesDtos = expensesDtos.Where(e => e.CategoryName == 
+                expensesDtos = expensesDtos.Where(e => e.CategoryName ==
                     _expenseCategories.FirstOrDefault(c => c.Id == FilterCategoryId.Value)?.Name);
             }
 
             if (!string.IsNullOrEmpty(SearchText))
             {
-                expensesDtos = expensesDtos.Where(e => 
+                expensesDtos = expensesDtos.Where(e =>
                     e.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
                     e.CategoryName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
                     e.UserName.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
@@ -160,10 +165,11 @@ public partial class ExpensesViewModel : ObservableObject
         SelectedExpense = expense;
         Description = expense.Description;
         Amount = expense.Amount;
-        ExpenseDate = expense.ExpenseDate;
+        ExpenseDate = expense.ExpenseDate.Date;
         Notes = expense.Notes;
         SelectedCategory = ExpenseCategories.FirstOrDefault(c => c.Name == expense.CategoryName);
         IsEditing = true;
+        SaveExpenseCommand.NotifyCanExecuteChanged();
     }
 
     private void CancelEdit()
@@ -180,12 +186,13 @@ public partial class ExpensesViewModel : ObservableObject
         ExpenseDate = DateTime.Today;
         Notes = string.Empty;
         SelectedCategory = null;
+        SaveExpenseCommand.NotifyCanExecuteChanged();
     }
 
     private bool CanSaveExpense()
     {
-        return !string.IsNullOrWhiteSpace(Description) && 
-               Amount > 0 && 
+        return !string.IsNullOrWhiteSpace(Description) &&
+               Amount > 0 &&
                SelectedCategory != null;
     }
 
@@ -197,13 +204,13 @@ public partial class ExpensesViewModel : ObservableObject
 
             if (IsEditing && SelectedExpense != null)
             {
-                // Update existing expense
                 var expense = new Expense
                 {
                     Id = SelectedExpense.Id,
                     Description = Description,
                     Amount = Amount,
-                    ExpenseCategoryId = SelectedCategory.Id,
+                    ExpenseDate = ExpenseDate.Date,
+                    ExpenseCategoryId = SelectedCategory!.Id,
                     Notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes,
                     UserId = _currentUser.Id
                 };
@@ -213,11 +220,11 @@ public partial class ExpensesViewModel : ObservableObject
             }
             else
             {
-                // Create new expense
                 var expense = new Expense
                 {
                     Description = Description,
                     Amount = Amount,
+                    ExpenseDate = ExpenseDate.Date,
                     ExpenseCategoryId = SelectedCategory!.Id,
                     Notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes,
                     UserId = _currentUser.Id
@@ -259,29 +266,32 @@ public partial class ExpensesViewModel : ObservableObject
         }
     }
 
-    private async Task FilterExpensesAsync()
+    private async Task ClearFiltersAsync()
     {
+        FilterStartDate = DateTime.Today.AddDays(-30);
+        FilterEndDate = DateTime.Today;
+        FilterCategoryId = null;
+        SearchText = string.Empty;
         await LoadExpensesAsync();
     }
+
+    partial void OnDescriptionChanged(string value) => SaveExpenseCommand.NotifyCanExecuteChanged();
+
+    partial void OnAmountChanged(decimal value) => SaveExpenseCommand.NotifyCanExecuteChanged();
+
+    partial void OnSelectedCategoryChanged(ExpenseCategory? value) => SaveExpenseCommand.NotifyCanExecuteChanged();
 
     partial void OnFilterStartDateChanged(DateTime value)
     {
         if (FilterStartDate > FilterEndDate)
-        {
             FilterEndDate = FilterStartDate;
-        }
     }
 
     partial void OnFilterEndDateChanged(DateTime value)
     {
         if (FilterEndDate < FilterStartDate)
-        {
             FilterStartDate = FilterEndDate;
-        }
     }
 
-    partial void OnFilterCategoryIdChanged(int? value)
-    {
-        _ = FilterExpensesAsync();
-    }
+    partial void OnFilterCategoryIdChanged(int? value) => _ = LoadExpensesAsync();
 }

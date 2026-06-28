@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using BusinessManager.Domain.DTOs;
 using BusinessManager.Domain.Interfaces;
+using BusinessManager.Domain.Entities;
 
 namespace BusinessManager.Application.Services;
 
@@ -13,44 +14,54 @@ public class ReportService : IReportService
 {
     private readonly ISaleRepository _saleRepository;
     private readonly IExpenseRepository _expenseRepository;
+    private readonly IDebtorRepository _debtorRepository;
     private readonly IProductRepository _productRepository;
+    private readonly DbAccessGate _dbGate;
     private readonly ILogger<ReportService> _logger;
 
     public ReportService(
         ISaleRepository saleRepository,
         IExpenseRepository expenseRepository,
+        IDebtorRepository debtorRepository,
         IProductRepository productRepository,
+        DbAccessGate dbGate,
         ILogger<ReportService> logger)
     {
         _saleRepository = saleRepository;
         _expenseRepository = expenseRepository;
+        _debtorRepository = debtorRepository;
         _productRepository = productRepository;
+        _dbGate = dbGate;
         _logger = logger;
     }
 
-    public async Task<DailySummaryDto> GetDailySummaryAsync(DateTime date)
+    public Task<DailySummaryDto> GetDailySummaryAsync(DateTime date) =>
+        _dbGate.RunAsync(() => GetDailySummaryCoreAsync(date));
+
+    private async Task<DailySummaryDto> GetDailySummaryCoreAsync(DateTime date)
     {
         try
         {
-            var startDate = date.Date;
-            var endDate = startDate.AddDays(1).AddTicks(-1);
+            var (startDate, endDate) = BusinessDateHelper.GetLocalDayRange(date);
 
             var sales = await _saleRepository.GetByDateRangeAsync(startDate, endDate);
             var expenses = await _expenseRepository.GetByDateRangeAsync(startDate, endDate);
 
-            var totalIncome = sales.Sum(s => s.TotalAmount);
+            var totalMadeToday = sales.Sum(s => GetSaleTotal(s));
             var totalExpenses = expenses.Sum(e => e.Amount);
-            var totalProfit = totalIncome - totalExpenses;
+            var drawerBalance = totalMadeToday - totalExpenses;
 
             return new DailySummaryDto
             {
-                Date = date,
-                TotalIncome = totalIncome,
+                Date = date.Date,
+                CashReceived = totalMadeToday,
+                TotalIncome = totalMadeToday,
                 TotalExpenses = totalExpenses,
-                TotalProfit = totalProfit,
+                DrawerBalance = drawerBalance,
+                TotalProfit = drawerBalance,
                 TotalSales = sales.Count(),
                 TotalExpensesCount = expenses.Count(),
-                AverageSaleAmount = sales.Any() ? totalIncome / sales.Count() : 0
+                AverageSaleAmount = sales.Any() ? totalMadeToday / sales.Count() : 0
             };
         }
         catch (Exception ex)
@@ -60,7 +71,10 @@ public class ReportService : IReportService
         }
     }
 
-    public async Task<WeeklySummaryDto> GetWeeklySummaryAsync(DateTime date)
+    public Task<WeeklySummaryDto> GetWeeklySummaryAsync(DateTime date) =>
+        _dbGate.RunAsync(() => GetWeeklySummaryCoreAsync(date));
+
+    private async Task<WeeklySummaryDto> GetWeeklySummaryCoreAsync(DateTime date)
     {
         try
         {
@@ -71,7 +85,7 @@ public class ReportService : IReportService
             var sales = await _saleRepository.GetByDateRangeAsync(weekStart, weekEnd);
             var expenses = await _expenseRepository.GetByDateRangeAsync(weekStart, weekEnd);
 
-            var totalIncome = sales.Sum(s => s.TotalAmount);
+            var totalIncome = sales.Sum(s => GetSaleTotal(s));
             var totalExpenses = expenses.Sum(e => e.Amount);
 
             return new WeeklySummaryDto
@@ -92,7 +106,10 @@ public class ReportService : IReportService
         }
     }
 
-    public async Task<MonthlySummaryDto> GetMonthlySummaryAsync(int year, int month)
+    public Task<MonthlySummaryDto> GetMonthlySummaryAsync(int year, int month) =>
+        _dbGate.RunAsync(() => GetMonthlySummaryCoreAsync(year, month));
+
+    private async Task<MonthlySummaryDto> GetMonthlySummaryCoreAsync(int year, int month)
     {
         try
         {
@@ -102,7 +119,7 @@ public class ReportService : IReportService
             var sales = await _saleRepository.GetByDateRangeAsync(startDate, endDate);
             var expenses = await _expenseRepository.GetByDateRangeAsync(startDate, endDate);
 
-            var totalIncome = sales.Sum(s => s.TotalAmount);
+            var totalIncome = sales.Sum(s => GetSaleTotal(s));
             var totalExpenses = expenses.Sum(e => e.Amount);
             var totalProfit = totalIncome - totalExpenses;
 
@@ -125,7 +142,10 @@ public class ReportService : IReportService
         }
     }
 
-    public async Task<IEnumerable<IncomeByModuleDto>> GetIncomeByModuleAsync(DateTime startDate, DateTime endDate)
+    public Task<IEnumerable<IncomeByModuleDto>> GetIncomeByModuleAsync(DateTime startDate, DateTime endDate) =>
+        _dbGate.RunAsync(() => GetIncomeByModuleCoreAsync(startDate, endDate));
+
+    private async Task<IEnumerable<IncomeByModuleDto>> GetIncomeByModuleCoreAsync(DateTime startDate, DateTime endDate)
     {
         try
         {
@@ -301,5 +321,13 @@ public class ReportService : IReportService
             _logger.LogError(ex, "Error deleting report {ReportId}", reportId);
             return false;
         }
+    }
+
+    internal static decimal GetSaleTotal(Sale sale)
+    {
+        if (sale.SaleItems != null && sale.SaleItems.Count > 0)
+            return sale.SaleItems.Sum(i => i.TotalPrice);
+
+        return sale.TotalAmount;
     }
 }

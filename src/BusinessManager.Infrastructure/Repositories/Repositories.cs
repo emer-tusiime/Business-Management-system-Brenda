@@ -142,13 +142,16 @@ public class SaleRepository : Repository<Sale>, ISaleRepository
 
     public async Task<IEnumerable<Sale>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
     {
+        var rangeStart = startDate.Date;
+        var rangeEndExclusive = endDate.Date.AddDays(1);
+
         return await _dbSet
             .Include(s => s.User)
             .Include(s => s.SaleItems)
                 .ThenInclude(si => si.ServiceItem)
             .Include(s => s.SaleItems)
                 .ThenInclude(si => si.Product)
-            .Where(s => s.SaleDate >= startDate && s.SaleDate <= endDate)
+            .Where(s => s.SaleDate >= rangeStart && s.SaleDate < rangeEndExclusive)
             .OrderByDescending(s => s.SaleDate)
             .ToListAsync();
     }
@@ -198,11 +201,14 @@ public class ExpenseRepository : Repository<Expense>, IExpenseRepository
 
     public async Task<IEnumerable<Expense>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
     {
+        var rangeStart = startDate.Date;
+        var rangeEndExclusive = endDate.Date.AddDays(1);
+
         return await _dbSet
             .Include(e => e.User)
             .Include(e => e.ExpenseCategory)
-            .Where(e => e.CreatedAt >= startDate && e.CreatedAt <= endDate)
-            .OrderByDescending(e => e.CreatedAt)
+            .Where(e => e.ExpenseDate >= rangeStart && e.ExpenseDate < rangeEndExclusive)
+            .OrderByDescending(e => e.ExpenseDate)
             .ToListAsync();
     }
 
@@ -212,7 +218,7 @@ public class ExpenseRepository : Repository<Expense>, IExpenseRepository
             .Include(e => e.User)
             .Include(e => e.ExpenseCategory)
             .Where(e => e.ExpenseCategoryId == categoryId)
-            .OrderByDescending(e => e.CreatedAt)
+            .OrderByDescending(e => e.ExpenseDate)
             .ToListAsync();
     }
 
@@ -371,5 +377,51 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
             .Where(al => al.CreatedAt >= startDate && al.CreatedAt <= endDate)
             .OrderByDescending(al => al.CreatedAt)
             .ToListAsync();
+    }
+}
+
+public class DebtorRepository : Repository<Debtor>, IDebtorRepository
+{
+    public DebtorRepository(AppDbContext context) : base(context) { }
+
+    public async Task<IEnumerable<Debtor>> GetActiveAsync()
+    {
+        return await _dbSet
+            .Include(d => d.User)
+            .Where(d => d.TotalAmount > d.AmountPaid)
+            .OrderByDescending(d => d.RecordDate)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Debtor>> GetByCustomerNameAsync(string customerName)
+    {
+        return await _dbSet
+            .Include(d => d.User)
+            .Where(d => d.CustomerName == customerName && !d.IsSettled)
+            .OrderByDescending(d => d.RecordDate)
+            .ToListAsync();
+    }
+
+    public async Task<decimal> GetTotalOutstandingAsync()
+    {
+        return await _dbSet
+            .Where(d => d.TotalAmount > d.AmountPaid)
+            .SumAsync(d => d.TotalAmount - d.AmountPaid);
+    }
+
+    public async Task<decimal> GetPaymentsTotalForDateRangeAsync(DateTime startDate, DateTime endDate)
+    {
+        var rangeStart = startDate.Date;
+        var rangeEndExclusive = endDate.Date.AddDays(1);
+
+        return await _context.Set<DebtPayment>()
+            .Where(p => p.PaymentDate >= rangeStart && p.PaymentDate < rangeEndExclusive)
+            .SumAsync(p => p.Amount);
+    }
+
+    public async Task AddPaymentAsync(DebtPayment payment)
+    {
+        await _context.Set<DebtPayment>().AddAsync(payment);
+        await _context.SaveChangesAsync();
     }
 }

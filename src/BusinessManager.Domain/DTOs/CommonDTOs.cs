@@ -7,8 +7,10 @@ namespace BusinessManager.Domain.DTOs;
 public class DailySummaryDto
 {
     public DateTime Date { get; set; }
+    public decimal CashReceived { get; set; }
     public decimal TotalIncome { get; set; }
     public decimal TotalExpenses { get; set; }
+    public decimal DrawerBalance { get; set; }
     public decimal TotalProfit { get; set; }
     public int TotalSales { get; set; }
     public int TotalExpensesCount { get; set; }
@@ -58,19 +60,41 @@ public class DashboardSummaryDto
 {
     public decimal TodayIncome { get; set; }
     public decimal TodayExpenses { get; set; }
-    public decimal TodayProfit { get; set; }
     public decimal DrawerOpeningBalance { get; set; }
     public decimal DrawerBalance { get; set; }
+    public decimal TotalOutstandingDebt { get; set; }
     public decimal ThisWeekIncome { get; set; }
     public decimal ThisWeekExpenses { get; set; }
-    public decimal ThisWeekProfit { get; set; }
     public decimal ThisMonthIncome { get; set; }
     public decimal ThisMonthExpenses { get; set; }
-    public decimal ThisMonthProfit { get; set; }
     public int LowStockCount { get; set; }
     public string? TopSellingItem { get; set; }
     public List<IncomeByModuleDto> IncomeByModule { get; set; } = new();
     public List<MonthlyTrendDto> MonthlyTrend { get; set; } = new();
+    public List<CustomerDebtSummaryDto> CustomerDebts { get; set; } = new();
+}
+
+public class CustomerDebtSummaryDto
+{
+    public string CustomerName { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
+    public decimal TotalOwed { get; set; }
+    public int OpenRecords { get; set; }
+}
+
+public class DebtorDto
+{
+    public int Id { get; set; }
+    public string CustomerName { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public decimal TotalAmount { get; set; }
+    public decimal AmountPaid { get; set; }
+    public decimal Balance { get; set; }
+    public DateTime RecordDate { get; set; }
+    public string Notes { get; set; } = string.Empty;
+    public string UserName { get; set; } = string.Empty;
+    public bool IsSettled { get; set; }
 }
 
 public class MonthlyTrendDto
@@ -78,7 +102,6 @@ public class MonthlyTrendDto
     public string Month { get; set; } = string.Empty;
     public decimal Income { get; set; }
     public decimal Expenses { get; set; }
-    public decimal Profit { get; set; }
 }
 
 public class SaleDto

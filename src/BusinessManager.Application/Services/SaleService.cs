@@ -13,21 +13,27 @@ public class SaleService : ISaleService
     private readonly ISaleRepository _saleRepository;
     private readonly IProductRepository _productRepository;
     private readonly IInventoryService _inventoryService;
+    private readonly DbAccessGate _dbGate;
     private readonly ILogger<SaleService> _logger;
 
     public SaleService(
         ISaleRepository saleRepository,
         IProductRepository productRepository,
         IInventoryService inventoryService,
+        DbAccessGate dbGate,
         ILogger<SaleService> logger)
     {
         _saleRepository = saleRepository;
         _productRepository = productRepository;
         _inventoryService = inventoryService;
+        _dbGate = dbGate;
         _logger = logger;
     }
 
-    public async Task<Sale> CreateSaleAsync(Sale sale, IEnumerable<SaleItem> saleItems)
+    public Task<Sale> CreateSaleAsync(Sale sale, IEnumerable<SaleItem> saleItems) =>
+        _dbGate.RunAsync(() => CreateSaleCoreAsync(sale, saleItems));
+
+    private async Task<Sale> CreateSaleCoreAsync(Sale sale, IEnumerable<SaleItem> saleItems)
     {
         try
         {
@@ -37,15 +43,24 @@ public class SaleService : ISaleService
                 sale.ReceiptNumber = await GenerateReceiptNumberAsync();
             }
 
-            // Calculate totals
+            // Calculate totals from line items (source of truth)
+            foreach (var item in saleItems)
+            {
+                item.TotalPrice = item.Quantity * item.UnitPrice;
+            }
+
             sale.Subtotal = saleItems.Sum(si => si.TotalPrice);
             sale.TotalAmount = sale.Subtotal + sale.TaxAmount - sale.DiscountAmount;
-            sale.ChangeAmount = sale.AmountPaid - sale.TotalAmount;
-            sale.CreatedAt = DateTime.UtcNow;
+            sale.AmountPaid = sale.TotalAmount;
+            sale.ChangeAmount = 0;
+            if (sale.SaleDate == default)
+                sale.SaleDate = DateTime.Now;
+
+            sale.CreatedAt = DateTime.Now;
 
             foreach (var item in saleItems)
             {
-                item.CreatedAt = DateTime.UtcNow;
+                item.CreatedAt = DateTime.Now;
                 sale.SaleItems.Add(item);
             }
 
@@ -90,7 +105,10 @@ public class SaleService : ISaleService
         }
     }
 
-    public async Task<IEnumerable<Sale>> GetSalesByDateRangeAsync(DateTime startDate, DateTime endDate)
+    public Task<IEnumerable<Sale>> GetSalesByDateRangeAsync(DateTime startDate, DateTime endDate) =>
+        _dbGate.RunAsync(() => GetSalesByDateRangeCoreAsync(startDate, endDate));
+
+    private async Task<IEnumerable<Sale>> GetSalesByDateRangeCoreAsync(DateTime startDate, DateTime endDate)
     {
         try
         {
@@ -118,11 +136,14 @@ public class SaleService : ISaleService
         }
     }
 
-    public async Task<bool> DeleteSaleAsync(int saleId)
+    public Task<bool> DeleteSaleAsync(int saleId) =>
+        _dbGate.RunAsync(() => DeleteSaleCoreAsync(saleId));
+
+    private async Task<bool> DeleteSaleCoreAsync(int saleId)
     {
         try
         {
-            var sale = await _saleRepository.GetByIdAsync(saleId);
+            var sale = await _saleRepository.GetWithItemsAsync(saleId);
             if (sale == null)
             {
                 return false;

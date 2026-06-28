@@ -49,7 +49,7 @@ public class NavigationService : INavigationService
             // Set DataContext if it's a View with ViewModel
             if (frameworkElement.DataContext == null)
             {
-                var viewModelType = Type.GetType($"BusinessManager.App.ViewModels.{typeof(T).Name.Replace("Window", "ViewModel")}");
+                var viewModelType = ResolveViewModelType(typeof(T));
                 if (viewModelType != null)
                 {
                     var viewModel = _serviceProvider.GetRequiredService(viewModelType);
@@ -75,6 +75,21 @@ public class NavigationService : INavigationService
         _navigationStack.Pop(); // Remove current
         var previous = _navigationStack.Peek();
         MainWindow.MainContent.Content = previous;
+    }
+
+    private static Type? ResolveViewModelType(Type viewType)
+    {
+        var name = viewType.Name;
+        string viewModelName;
+
+        if (name.EndsWith("View", StringComparison.Ordinal))
+            viewModelName = name[..^4] + "ViewModel";
+        else if (name.EndsWith("Window", StringComparison.Ordinal))
+            viewModelName = name[..^6] + "ViewModel";
+        else
+            viewModelName = name + "ViewModel";
+
+        return viewType.Assembly.GetType($"BusinessManager.App.ViewModels.{viewModelName}");
     }
 }
 

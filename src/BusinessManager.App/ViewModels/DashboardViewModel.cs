@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -11,6 +12,7 @@ using SkiaSharp;
 using BusinessManager.App.Services;
 using BusinessManager.Domain.Interfaces;
 using BusinessManager.Domain.DTOs;
+using BusinessManager.Domain.Entities;
 
 namespace BusinessManager.App.ViewModels;
 
@@ -18,8 +20,7 @@ public partial class DashboardViewModel : ObservableObject
 {
     private readonly IReportService _reportService;
     private readonly IInventoryService _inventoryService;
-    private readonly ISettingService _settingService;
-    private readonly IDialogService _dialogService;
+    private readonly IDebtorService _debtorService;
     private readonly ILogger<DashboardViewModel> _logger;
 
     [ObservableProperty]
@@ -46,22 +47,18 @@ public partial class DashboardViewModel : ObservableObject
     public DashboardViewModel(
         IReportService reportService,
         IInventoryService inventoryService,
-        ISettingService settingService,
-        IDialogService dialogService,
+        IDebtorService debtorService,
         ILogger<DashboardViewModel> logger)
     {
         _reportService = reportService;
         _inventoryService = inventoryService;
-        _settingService = settingService;
-        _dialogService = dialogService;
+        _debtorService = debtorService;
         _logger = logger;
 
         LoadDataCommand = new RelayCommand(async () => await LoadDataAsync());
-        SetDrawerOpeningBalanceCommand = new RelayCommand(async () => await SetDrawerOpeningBalanceAsync());
     }
 
     public IRelayCommand LoadDataCommand { get; }
-    public IRelayCommand SetDrawerOpeningBalanceCommand { get; }
 
     public async Task LoadDataAsync()
     {
@@ -71,40 +68,87 @@ public partial class DashboardViewModel : ObservableObject
 
             var today = DateTime.Today;
             var thisMonthStart = new DateTime(today.Year, today.Month, 1);
-            var thisMonthEnd = thisMonthStart.AddMonths(1).AddTicks(-1);
+            var thisMonthEnd = today;
 
-            var dailySummary = await _reportService.GetDailySummaryAsync(today);
-            var weeklySummary = await _reportService.GetWeeklySummaryAsync(today);
-            var monthlySummary = await _reportService.GetMonthlySummaryAsync(today.Year, today.Month);
-            var incomeByModule = await _reportService.GetIncomeByModuleAsync(thisMonthStart, thisMonthEnd);
-            var lowStockProducts = await _inventoryService.GetLowStockProductsAsync();
+            var summary = new DashboardSummaryDto();
 
-            var openingBalanceText = await _settingService.GetSettingAsync("DrawerOpeningBalance");
-            var openingBalance = decimal.TryParse(openingBalanceText, out var parsedBalance) ? parsedBalance : 0m;
-            var drawerBalance = openingBalance + dailySummary.TotalIncome - dailySummary.TotalExpenses;
-
-            Summary = new DashboardSummaryDto
+            try
             {
-                TodayIncome = dailySummary.TotalIncome,
-                TodayExpenses = dailySummary.TotalExpenses,
-                TodayProfit = dailySummary.TotalProfit,
-                DrawerOpeningBalance = openingBalance,
-                DrawerBalance = drawerBalance,
-                ThisWeekIncome = weeklySummary.TotalIncome,
-                ThisWeekExpenses = weeklySummary.TotalExpenses,
-                ThisWeekProfit = weeklySummary.TotalProfit,
-                ThisMonthIncome = monthlySummary.TotalIncome,
-                ThisMonthExpenses = monthlySummary.TotalExpenses,
-                ThisMonthProfit = monthlySummary.TotalProfit,
-                LowStockCount = lowStockProducts.Count(),
-                TopSellingItem = incomeByModule.FirstOrDefault()?.Module,
-                IncomeByModule = incomeByModule.ToList(),
-                MonthlyTrend = await GetMonthlyTrendAsync()
-            };
+                var dailySummary = await _reportService.GetDailySummaryAsync(today);
+                summary.TodayIncome = dailySummary.TotalIncome;
+                summary.TodayExpenses = dailySummary.TotalExpenses;
+                summary.DrawerBalance = dailySummary.DrawerBalance;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading daily summary");
+            }
 
+            try
+            {
+                var weeklySummary = await _reportService.GetWeeklySummaryAsync(today);
+                summary.ThisWeekIncome = weeklySummary.TotalIncome;
+                summary.ThisWeekExpenses = weeklySummary.TotalExpenses;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading weekly summary");
+            }
+
+            try
+            {
+                var monthlySummary = await _reportService.GetMonthlySummaryAsync(today.Year, today.Month);
+                summary.ThisMonthIncome = monthlySummary.TotalIncome;
+                summary.ThisMonthExpenses = monthlySummary.TotalExpenses;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading monthly summary");
+            }
+
+            try
+            {
+                var incomeByModule = await _reportService.GetIncomeByModuleAsync(thisMonthStart, thisMonthEnd);
+                summary.IncomeByModule = incomeByModule.ToList();
+                summary.TopSellingItem = summary.IncomeByModule.FirstOrDefault()?.Module;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading income by module");
+            }
+
+            try
+            {
+                var lowStockProducts = await _inventoryService.GetLowStockProductsAsync();
+                summary.LowStockCount = lowStockProducts.Count();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading low stock products");
+            }
+
+            try
+            {
+                summary.TotalOutstandingDebt = await _debtorService.GetTotalOutstandingAsync();
+                summary.CustomerDebts = (await _debtorService.GetCustomerDebtSummariesAsync()).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading debtor summaries");
+            }
+
+            try
+            {
+                summary.MonthlyTrend = await GetMonthlyTrendAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading monthly trend");
+            }
+
+            Summary = summary;
             UpdateIncomeByModuleChart(Summary.IncomeByModule);
             UpdateMonthlyTrendChart(Summary.MonthlyTrend);
-
             LastUpdated = DateTime.Now.ToString("HH:mm:ss");
         }
         catch (Exception ex)
@@ -115,22 +159,6 @@ public partial class DashboardViewModel : ObservableObject
         {
             IsLoading = false;
         }
-    }
-
-    private async Task SetDrawerOpeningBalanceAsync()
-    {
-        var input = _dialogService.ShowInputDialog(
-            "Enter the cash amount currently in the drawer at the start of today:",
-            "Set Drawer Opening Balance",
-            Summary.DrawerOpeningBalance.ToString("0"));
-
-        if (string.IsNullOrWhiteSpace(input) || !decimal.TryParse(input, out var amount) || amount < 0)
-        {
-            return;
-        }
-
-        await _settingService.SetSettingAsync("DrawerOpeningBalance", amount);
-        await LoadDataAsync();
     }
 
     private void UpdateIncomeByModuleChart(List<IncomeByModuleDto> incomeByModule)
@@ -206,16 +234,7 @@ public partial class DashboardViewModel : ObservableObject
             Fill = null
         };
 
-        var profitSeries = new LineSeries<double>
-        {
-            Values = monthlyTrend.Select(t => (double)t.Profit).ToArray(),
-            Name = "Profit",
-            GeometrySize = 10,
-            Stroke = new SolidColorPaint(SKColors.Blue, 3),
-            Fill = null
-        };
-
-        MonthlyTrendSeries = new ISeries[] { incomeSeries, expenseSeries, profitSeries };
+        MonthlyTrendSeries = new ISeries[] { incomeSeries, expenseSeries };
 
         MonthlyTrendXAxes = new Axis[]
         {
@@ -255,8 +274,7 @@ public partial class DashboardViewModel : ObservableObject
             {
                 Month = month.ToString("MMM"),
                 Income = summary.TotalIncome,
-                Expenses = summary.TotalExpenses,
-                Profit = summary.TotalProfit
+                Expenses = summary.TotalExpenses
             });
         }
 

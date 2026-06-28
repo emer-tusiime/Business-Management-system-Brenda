@@ -13,21 +13,23 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         // Services
-        services.AddScoped<IAuthService, AuthService>();
-        services.AddScoped<IUserService, UserService>();
-        services.AddScoped<ISaleService, SaleService>();
-        services.AddScoped<IExpenseService, ExpenseService>();
-        services.AddScoped<IInventoryService, InventoryService>();
-        services.AddScoped<IReportService, ReportService>();
-        services.AddScoped<ISettingService, SettingService>();
-        services.AddScoped<IBackupService, BackupService>();
+        services.AddSingleton<IAuthService, AuthService>();
+        services.AddSingleton<IUserService, UserService>();
+        services.AddSingleton<ISaleService, SaleService>();
+        services.AddSingleton<IExpenseService, ExpenseService>();
+        services.AddSingleton<IDebtorService, DebtorService>();
+        services.AddSingleton<DbAccessGate>();
+        services.AddSingleton<IInventoryService, InventoryService>();
+        services.AddSingleton<IReportService, ReportService>();
+        services.AddSingleton<ISettingService, SettingService>();
+        services.AddSingleton<IBackupService, BackupService>();
         services.AddSingleton<INotificationService, NotificationService>();
 
         // Validators
-        services.AddScoped<IValidator<User>, UserValidator>();
-        services.AddScoped<IValidator<Sale>, SaleValidator>();
-        services.AddScoped<IValidator<Expense>, ExpenseValidator>();
-        services.AddScoped<IValidator<Product>, ProductValidator>();
+        services.AddSingleton<IValidator<User>, UserValidator>();
+        services.AddSingleton<IValidator<Sale>, SaleValidator>();
+        services.AddSingleton<IValidator<Expense>, ExpenseValidator>();
+        services.AddSingleton<IValidator<Product>, ProductValidator>();
 
         // AutoMapper
         services.AddAutoMapper(typeof(MappingProfile));

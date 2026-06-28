@@ -2,8 +2,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
-using System; using System.Collections.Generic; using System.Threading.Tasks; using CommunityToolkit.Mvvm.ComponentModel; using CommunityToolkit.Mvvm.Input; using Microsoft.Extensions.Logging; using BusinessManager.Domain.Interfaces; using BusinessManager.Domain.Entities; using BusinessManager.Domain.DTOs; using BusinessManager.Domain.Enums; using BusinessManager.Application.Services;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using BusinessManager.App.Services;
+using BusinessManager.Domain.Interfaces;
 using BusinessManager.Domain.Entities;
 using BusinessManager.Domain.DTOs;
 using BusinessManager.Domain.Enums;
@@ -42,19 +46,7 @@ public partial class SalesViewModel : ObservableObject
     private decimal _subtotal;
 
     [ObservableProperty]
-    private decimal _taxAmount = 0;
-
-    [ObservableProperty]
-    private decimal _discountAmount = 0;
-
-    [ObservableProperty]
     private decimal _totalAmount;
-
-    [ObservableProperty]
-    private decimal _amountPaid;
-
-    [ObservableProperty]
-    private decimal _changeAmount;
 
     [ObservableProperty]
     private string _customerName = string.Empty;
@@ -72,10 +64,16 @@ public partial class SalesViewModel : ObservableObject
     private DateTime _filterStartDate = DateTime.Today;
 
     [ObservableProperty]
-    private DateTime _filterEndDate = DateTime.Today.AddDays(1).AddTicks(-1);
+    private DateTime _filterEndDate = DateTime.Today;
 
     [ObservableProperty]
     private string _searchText = string.Empty;
+
+    [ObservableProperty]
+    private decimal _historyTotalAmount;
+
+    [ObservableProperty]
+    private int _historyTransactionCount;
 
     public SalesViewModel(
         ISaleService saleService,
@@ -102,7 +100,7 @@ public partial class SalesViewModel : ObservableObject
         ClearSaleCommand = new RelayCommand(ClearSale);
         DeleteSaleCommand = new RelayCommand<SaleDto>(async (sale) => await DeleteSaleAsync(sale), CanDeleteSale);
         RefreshCommand = new RelayCommand(async () => await LoadSalesAsync());
-        SearchCommand = new RelayCommand(async () => await FilterSalesAsync());
+        SearchCommand = new RelayCommand(async () => await LoadSalesAsync());
     }
 
     public IRelayCommand LoadSalesCommand { get; }
@@ -127,37 +125,46 @@ public partial class SalesViewModel : ObservableObject
         try
         {
             IsLoading = true;
-            
+
             var sales = await _saleService.GetSalesByDateRangeAsync(FilterStartDate, FilterEndDate);
-            var salesDtos = sales.Select(s => new SaleDto
+            var salesDtos = sales.Select(s =>
             {
-                Id = s.Id,
-                ReceiptNumber = s.ReceiptNumber,
-                SaleDate = s.SaleDate,
-                TotalAmount = s.TotalAmount,
-                CustomerName = s.CustomerName ?? "",
-                UserName = s.User.FullName,
-                SaleItems = s.SaleItems.Select(si => new SaleItemDto
+                var items = s.SaleItems.Select(si => new SaleItemDto
                 {
                     Id = si.Id,
-                    Description = si.Description ?? "",
+                    Description = si.Description ?? si.ServiceItem?.Name ?? si.Product?.Name ?? "",
                     Quantity = si.Quantity,
                     UnitPrice = si.UnitPrice,
-                    TotalPrice = si.TotalPrice,
+                    TotalPrice = si.Quantity * si.UnitPrice,
                     ServiceName = si.ServiceItem?.Name,
                     ProductName = si.Product?.Name
-                }).ToList()
-            });
+                }).ToList();
+
+                var calculatedTotal = items.Sum(i => i.TotalPrice);
+
+                return new SaleDto
+                {
+                    Id = s.Id,
+                    ReceiptNumber = s.ReceiptNumber,
+                    SaleDate = s.SaleDate,
+                    TotalAmount = calculatedTotal > 0 ? calculatedTotal : s.TotalAmount,
+                    CustomerName = s.CustomerName ?? "",
+                    UserName = s.User.FullName,
+                    SaleItems = items
+                };
+            }).ToList();
 
             if (!string.IsNullOrEmpty(SearchText))
             {
-                salesDtos = salesDtos.Where(s => 
+                salesDtos = salesDtos.Where(s =>
                     s.ReceiptNumber.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
                     s.CustomerName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-                    s.UserName.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
+                    s.UserName.Contains(SearchText, StringComparison.OrdinalIgnoreCase)).ToList();
             }
 
             Sales = new ObservableCollection<SaleDto>(salesDtos.OrderByDescending(s => s.SaleDate));
+            HistoryTotalAmount = Sales.Sum(s => s.TotalAmount);
+            HistoryTransactionCount = Sales.Count;
         }
         catch (Exception ex)
         {
@@ -206,20 +213,17 @@ public partial class SalesViewModel : ObservableObject
             serviceItem.DefaultPrice.ToString("0"));
 
         if (string.IsNullOrWhiteSpace(amountInput) || !decimal.TryParse(amountInput, out var amount) || amount <= 0)
-        {
             return;
-        }
 
-        var saleItem = new SaleItemDto
+        CurrentSaleItems.Add(new SaleItemDto
         {
             Description = serviceItem.Name,
             Quantity = 1,
             UnitPrice = amount,
             TotalPrice = amount,
             ServiceName = serviceItem.Name
-        };
+        });
 
-        CurrentSaleItems.Add(saleItem);
         CalculateTotals();
     }
 
@@ -233,16 +237,15 @@ public partial class SalesViewModel : ObservableObject
             return;
         }
 
-        var saleItem = new SaleItemDto
+        CurrentSaleItems.Add(new SaleItemDto
         {
             Description = product.Name,
             Quantity = 1,
             UnitPrice = product.SellingPrice,
             TotalPrice = product.SellingPrice,
             ProductName = product.Name
-        };
+        });
 
-        CurrentSaleItems.Add(saleItem);
         CalculateTotals();
     }
 
@@ -256,17 +259,15 @@ public partial class SalesViewModel : ObservableObject
 
     private void CalculateTotals()
     {
+        foreach (var item in CurrentSaleItems)
+            item.TotalPrice = item.Quantity * item.UnitPrice;
+
         Subtotal = CurrentSaleItems.Sum(si => si.TotalPrice);
-        TotalAmount = Subtotal + TaxAmount - DiscountAmount;
-        AmountPaid = TotalAmount;
-        ChangeAmount = 0;
+        TotalAmount = Subtotal;
         SaveSaleCommand.NotifyCanExecuteChanged();
     }
 
-    private bool CanSaveSale()
-    {
-        return CurrentSaleItems.Any() && TotalAmount > 0;
-    }
+    private bool CanSaveSale() => CurrentSaleItems.Any() && TotalAmount > 0;
 
     private async Task SaveSaleAsync()
     {
@@ -278,18 +279,17 @@ public partial class SalesViewModel : ObservableObject
                 return;
             }
 
-            AmountPaid = TotalAmount;
-            ChangeAmount = 0;
+            CalculateTotals();
 
             var sale = new Sale
             {
-                SaleDate = DateTime.UtcNow,
+                SaleDate = DateTime.Now,
                 Subtotal = Subtotal,
-                TaxAmount = TaxAmount,
-                DiscountAmount = DiscountAmount,
+                TaxAmount = 0,
+                DiscountAmount = 0,
                 TotalAmount = TotalAmount,
-                AmountPaid = AmountPaid,
-                ChangeAmount = ChangeAmount,
+                AmountPaid = TotalAmount,
+                ChangeAmount = 0,
                 CustomerName = string.IsNullOrWhiteSpace(CustomerName) ? null : CustomerName,
                 CustomerPhone = string.IsNullOrWhiteSpace(CustomerPhone) ? null : CustomerPhone,
                 Notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes,
@@ -300,11 +300,11 @@ public partial class SalesViewModel : ObservableObject
             {
                 Quantity = si.Quantity,
                 UnitPrice = si.UnitPrice,
-                TotalPrice = si.TotalPrice,
+                TotalPrice = si.Quantity * si.UnitPrice,
                 Description = si.Description,
-                ServiceItemId = si.ServiceName != null ? 
+                ServiceItemId = si.ServiceName != null ?
                     ServiceItems.FirstOrDefault(s => s.Name == si.ServiceName)?.Id : null,
-                ProductId = si.ProductName != null ? 
+                ProductId = si.ProductName != null ?
                     Products.FirstOrDefault(p => p.Name == si.ProductName)?.Id : null
             }).ToList();
 
@@ -327,16 +327,10 @@ public partial class SalesViewModel : ObservableObject
         CustomerName = string.Empty;
         CustomerPhone = string.Empty;
         Notes = string.Empty;
-        AmountPaid = 0;
-        DiscountAmount = 0;
-        TaxAmount = 0;
         CalculateTotals();
     }
 
-    private bool CanDeleteSale(SaleDto? sale)
-    {
-        return sale != null && _currentUser.Role == UserRole.Admin;
-    }
+    private bool CanDeleteSale(SaleDto? sale) => sale != null && _currentUser.Role == UserRole.Admin;
 
     private async Task DeleteSaleAsync(SaleDto? sale)
     {
@@ -358,39 +352,15 @@ public partial class SalesViewModel : ObservableObject
         }
     }
 
-    private async Task FilterSalesAsync()
-    {
-        await LoadSalesAsync();
-    }
-
-    partial void OnAmountPaidChanged(decimal value)
-    {
-        CalculateTotals();
-    }
-
-    partial void OnDiscountAmountChanged(decimal value)
-    {
-        CalculateTotals();
-    }
-
-    partial void OnTaxAmountChanged(decimal value)
-    {
-        CalculateTotals();
-    }
-
     partial void OnFilterStartDateChanged(DateTime value)
     {
-        if (FilterStartDate > FilterEndDate)
-        {
+        if (FilterStartDate.Date > FilterEndDate.Date)
             FilterEndDate = FilterStartDate;
-        }
     }
 
     partial void OnFilterEndDateChanged(DateTime value)
     {
-        if (FilterEndDate < FilterStartDate)
-        {
+        if (FilterEndDate.Date < FilterStartDate.Date)
             FilterStartDate = FilterEndDate;
-        }
     }
 }

@@ -70,14 +70,62 @@ public partial class App : System.Windows.Application
             
             await context.Database.EnsureCreatedAsync();
             
+            await EnsureDebtorsSchemaAsync(context);
             await SeedDataAsync(scope.ServiceProvider);
-            await EnsureBusinessDataAsync(scope.ServiceProvider);
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    using var bgScope = _host!.Services.CreateScope();
+                    await EnsureBusinessDataAsync(bgScope.ServiceProvider);
+                }
+                catch (Exception ex)
+                {
+                    Log.Logger.Warning(ex, "Background business data sync failed");
+                }
+            });
         }
         catch (Exception ex)
         {
             Log.Logger.Error(ex, "Database initialization failed");
             throw;
         }
+    }
+
+    private async Task EnsureDebtorsSchemaAsync(AppDbContext context)
+    {
+        await context.Database.ExecuteSqlRawAsync("""
+            CREATE TABLE IF NOT EXISTS "Debtors" (
+                "Id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                "CustomerName" TEXT NOT NULL,
+                "Phone" TEXT NULL,
+                "Description" TEXT NOT NULL,
+                "TotalAmount" REAL NOT NULL,
+                "AmountPaid" REAL NOT NULL,
+                "RecordDate" TEXT NOT NULL,
+                "Notes" TEXT NULL,
+                "UserId" INTEGER NOT NULL,
+                "IsSettled" INTEGER NOT NULL,
+                "CreatedAt" TEXT NOT NULL,
+                "UpdatedAt" TEXT NULL,
+                FOREIGN KEY("UserId") REFERENCES "Users"("Id")
+            );
+            """);
+
+        await context.Database.ExecuteSqlRawAsync("""
+            CREATE TABLE IF NOT EXISTS "DebtPayments" (
+                "Id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                "DebtorId" INTEGER NOT NULL,
+                "Amount" REAL NOT NULL,
+                "PaymentDate" TEXT NOT NULL,
+                "Notes" TEXT NULL,
+                "UserId" INTEGER NOT NULL,
+                "CreatedAt" TEXT NOT NULL,
+                FOREIGN KEY("DebtorId") REFERENCES "Debtors"("Id") ON DELETE CASCADE,
+                FOREIGN KEY("UserId") REFERENCES "Users"("Id")
+            );
+            """);
     }
 
     private async Task SeedDataAsync(IServiceProvider serviceProvider)
@@ -145,17 +193,30 @@ public partial class App : System.Windows.Application
             });
         }
 
-        var adminId = await context.Users
-            .AsNoTracking()
-            .Where(u => u.Username == "admin")
-            .Select(u => u.Id)
-            .FirstOrDefaultAsync();
-
-        if (adminId != 0)
+        var admin = await context.Users.FirstOrDefaultAsync(u => u.Username == "admin");
+        if (admin != null && !PasswordHasher.Verify("Admin123", admin.PasswordHash))
         {
             var authService = serviceProvider.GetRequiredService<IAuthService>();
-            await authService.SetPasswordAsync(adminId, "Admin123");
-            logger.LogInformation("Ensured default admin credentials are valid");
+            await authService.SetPasswordAsync(admin.Id, "Admin123");
+            logger.LogInformation("Reset admin password to default");
+        }
+
+        var expensesNeedingDate = await context.Expenses
+            .Where(e => e.ExpenseDate < new DateTime(2000, 1, 1))
+            .ToListAsync();
+        foreach (var expense in expensesNeedingDate)
+        {
+            expense.ExpenseDate = expense.CreatedAt;
+        }
+
+        try
+        {
+            await context.Database.ExecuteSqlRawAsync(
+                "UPDATE Debtors SET IsSettled = 0 WHERE TotalAmount > AmountPaid");
+        }
+        catch
+        {
+            // Debtors table may not exist yet on first run
         }
 
         await context.SaveChangesAsync();

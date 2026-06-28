@@ -87,3 +87,12 @@ public interface IAuditLogRepository : IRepository<AuditLog>
     Task<IEnumerable<AuditLog>> GetByActionAsync(string action);
     Task<IEnumerable<AuditLog>> GetByDateRangeAsync(DateTime startDate, DateTime endDate);
 }
+
+public interface IDebtorRepository : IRepository<Debtor>
+{
+    Task<IEnumerable<Debtor>> GetActiveAsync();
+    Task<IEnumerable<Debtor>> GetByCustomerNameAsync(string customerName);
+    Task<decimal> GetTotalOutstandingAsync();
+    Task<decimal> GetPaymentsTotalForDateRangeAsync(DateTime startDate, DateTime endDate);
+    Task AddPaymentAsync(DebtPayment payment);
+}

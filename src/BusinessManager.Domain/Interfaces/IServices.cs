@@ -92,6 +92,18 @@ public interface IBackupService
     Task<bool> DeleteBackupAsync(int backupId);
 }
 
+public interface IDebtorService
+{
+    Task<Debtor> CreateDebtorAsync(Debtor debtor);
+    Task<Debtor?> GetDebtorByIdAsync(int id);
+    Task<IEnumerable<Debtor>> GetActiveDebtorsAsync();
+    Task<IEnumerable<CustomerDebtSummaryDto>> GetCustomerDebtSummariesAsync();
+    Task<decimal> GetTotalOutstandingAsync();
+    Task<Debtor> RecordPaymentAsync(int debtorId, decimal amount, string? notes, int userId);
+    Task<Debtor> UpdateDebtorAsync(Debtor debtor);
+    Task<bool> DeleteDebtorAsync(int debtorId);
+}
+
 public interface INotificationService
 {
     void ShowInfo(string message);
