@@ -23,6 +23,8 @@ public partial class DashboardViewModel : ObservableObject
     private readonly IDebtorService _debtorService;
     private readonly ILogger<DashboardViewModel> _logger;
 
+    private DateTime? _lastLoadedDate;
+
     [ObservableProperty]
     private DashboardSummaryDto _summary = new();
 
@@ -55,13 +57,17 @@ public partial class DashboardViewModel : ObservableObject
         _debtorService = debtorService;
         _logger = logger;
 
-        LoadDataCommand = new RelayCommand(async () => await LoadDataAsync());
+        LoadDataCommand = new RelayCommand(async () => await LoadDataAsync(forceReload: true));
     }
 
     public IRelayCommand LoadDataCommand { get; }
 
-    public async Task LoadDataAsync()
+    public async Task LoadDataAsync(bool forceReload = false)
     {
+        // Skip reload if data is already fresh for today (auto-load on navigation)
+        if (!forceReload && _lastLoadedDate == DateTime.Today && Summary.TodayIncome > 0)
+            return;
+
         try
         {
             IsLoading = true;
@@ -150,6 +156,7 @@ public partial class DashboardViewModel : ObservableObject
             UpdateIncomeByModuleChart(Summary.IncomeByModule);
             UpdateMonthlyTrendChart(Summary.MonthlyTrend);
             LastUpdated = DateTime.Now.ToString("HH:mm:ss");
+            _lastLoadedDate = DateTime.Today;
         }
         catch (Exception ex)
         {

@@ -15,7 +15,8 @@ public partial class DashboardView : UserControl
     {
         if (DataContext is ViewModels.DashboardViewModel viewModel)
         {
-            await viewModel.LoadDataAsync();
+            // forceReload=false: reuses cached data if already loaded today
+            await viewModel.LoadDataAsync(forceReload: false);
         }
     }
 

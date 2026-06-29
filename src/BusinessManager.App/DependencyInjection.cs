@@ -23,7 +23,7 @@ public static class DependencyInjection
         services.AddTransient<LoginViewModel>();
 
         services.AddTransient<DashboardView>();
-        services.AddTransient<DashboardViewModel>(sp => new DashboardViewModel(
+        services.AddSingleton<DashboardViewModel>(sp => new DashboardViewModel(
             sp.GetRequiredService<BusinessManager.Domain.Interfaces.IReportService>(),
             sp.GetRequiredService<BusinessManager.Domain.Interfaces.IInventoryService>(),
             sp.GetRequiredService<BusinessManager.Domain.Interfaces.IDebtorService>(),

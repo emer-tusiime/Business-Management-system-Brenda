@@ -19,7 +19,9 @@ public static class DependencyInjection
         }
 
         services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlite(connectionString), ServiceLifetime.Singleton, ServiceLifetime.Singleton);
+            options.UseSqlite(connectionString)
+                   .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTrackingWithIdentityResolution),
+            ServiceLifetime.Singleton, ServiceLifetime.Singleton);
 
         services.AddSingleton<IUserRepository, UserRepository>();
         services.AddSingleton<IServiceItemRepository, ServiceItemRepository>();
