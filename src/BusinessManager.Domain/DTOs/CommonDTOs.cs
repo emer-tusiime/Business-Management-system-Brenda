@@ -60,6 +60,7 @@ public class DashboardSummaryDto
 {
     public decimal TodayIncome { get; set; }
     public decimal TodayExpenses { get; set; }
+    public decimal TodaySavings { get; set; }
     public decimal DrawerOpeningBalance { get; set; }
     public decimal DrawerBalance { get; set; }
     public decimal TotalOutstandingDebt { get; set; }
@@ -73,6 +74,49 @@ public class DashboardSummaryDto
     public List<MonthlyTrendDto> MonthlyTrend { get; set; } = new();
     public List<CustomerDebtSummaryDto> CustomerDebts { get; set; } = new();
 }
+
+public class SavingDto
+{
+    public int Id { get; set; }
+    public DateTime Date { get; set; }
+    public decimal Amount { get; set; }
+    public string? Notes { get; set; }
+    public string UserName { get; set; } = string.Empty;
+}
+
+public class ClientOrderDto
+{
+    public int Id { get; set; }
+    public string ClientName { get; set; } = string.Empty;
+    public string? Phone { get; set; }
+    public string Description { get; set; } = string.Empty;
+    public DateTime OrderDate { get; set; }
+    public DateTime PickupDate { get; set; }
+    public OrderStatus Status { get; set; }
+    public string StatusLabel => Status switch
+    {
+        OrderStatus.Pending => "Pending",
+        OrderStatus.Ready => "Ready for Pickup",
+        OrderStatus.Delivered => "Delivered",
+        _ => "Unknown"
+    };
+    public string? Notes { get; set; }
+    public string UserName { get; set; } = string.Empty;
+    public bool IsOverdue { get; set; }
+    public bool IsDueToday { get; set; }
+}
+
+public class AppNotification
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public bool IsRead { get; set; }
+    public NotificationKind Kind { get; set; }
+}
+
+public enum NotificationKind { Info, Warning, Urgent }
 
 public class CustomerDebtSummaryDto
 {

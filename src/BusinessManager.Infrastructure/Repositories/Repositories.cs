@@ -380,6 +380,84 @@ public class AuditLogRepository : Repository<AuditLog>, IAuditLogRepository
     }
 }
 
+public class SavingRepository : Repository<Saving>, ISavingRepository
+{
+    public SavingRepository(AppDbContext context) : base(context) { }
+
+    public async Task<IEnumerable<Saving>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
+    {
+        var start = startDate.Date;
+        var end = endDate.Date.AddDays(1);
+        return await _dbSet
+            .Include(s => s.User)
+            .Where(s => s.Date >= start && s.Date < end)
+            .OrderByDescending(s => s.Date)
+            .ToListAsync();
+    }
+
+    public async Task<decimal> GetTotalForDateAsync(DateTime date)
+    {
+        var start = date.Date;
+        var end = date.Date.AddDays(1);
+        var amounts = await _dbSet
+            .Where(s => s.Date >= start && s.Date < end)
+            .Select(s => s.Amount)
+            .ToListAsync();
+        return amounts.Sum();
+    }
+
+    public async Task<decimal> GetTotalForDateRangeAsync(DateTime startDate, DateTime endDate)
+    {
+        var start = startDate.Date;
+        var end = endDate.Date.AddDays(1);
+        var amounts = await _dbSet
+            .Where(s => s.Date >= start && s.Date < end)
+            .Select(s => s.Amount)
+            .ToListAsync();
+        return amounts.Sum();
+    }
+}
+
+public class ClientOrderRepository : Repository<ClientOrder>, IClientOrderRepository
+{
+    public ClientOrderRepository(AppDbContext context) : base(context) { }
+
+    public async Task<IEnumerable<ClientOrder>> GetByStatusAsync(OrderStatus status)
+        => await _dbSet.Include(o => o.User).Where(o => o.Status == status)
+            .OrderBy(o => o.PickupDate).ToListAsync();
+
+    public async Task<IEnumerable<ClientOrder>> GetDueTodayAsync()
+    {
+        var today = DateTime.Today;
+        var tomorrow = today.AddDays(1);
+        return await _dbSet.Include(o => o.User)
+            .Where(o => o.Status != OrderStatus.Delivered && o.PickupDate >= today && o.PickupDate < tomorrow)
+            .OrderBy(o => o.PickupDate).ToListAsync();
+    }
+
+    public async Task<IEnumerable<ClientOrder>> GetOverdueAsync()
+    {
+        var today = DateTime.Today;
+        return await _dbSet.Include(o => o.User)
+            .Where(o => o.Status != OrderStatus.Delivered && o.PickupDate < today)
+            .OrderBy(o => o.PickupDate).ToListAsync();
+    }
+
+    public async Task<IEnumerable<ClientOrder>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
+    {
+        var start = startDate.Date;
+        var end = endDate.Date.AddDays(1);
+        return await _dbSet.Include(o => o.User)
+            .Where(o => o.OrderDate >= start && o.OrderDate < end)
+            .OrderByDescending(o => o.OrderDate).ToListAsync();
+    }
+
+    public async Task<IEnumerable<ClientOrder>> GetPendingAsync()
+        => await _dbSet.Include(o => o.User)
+            .Where(o => o.Status == OrderStatus.Pending || o.Status == OrderStatus.Ready)
+            .OrderBy(o => o.PickupDate).ToListAsync();
+}
+
 public class DebtorRepository : Repository<Debtor>, IDebtorRepository
 {
     public DebtorRepository(AppDbContext context) : base(context) { }

@@ -6,8 +6,10 @@ using System; using System.Collections.Generic; using System.Threading.Tasks; us
 using BusinessManager.Domain.Entities;
 using BusinessManager.Domain.DTOs;
 using BusinessManager.Infrastructure.Data;
+using BusinessManager.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
+using System.Collections.Generic;
 
 namespace BusinessManager.App.ViewModels;
 
@@ -16,6 +18,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly ISettingService _settingService;
     private readonly IServiceItemRepository _serviceItemRepository;
     private readonly IProductRepository _productRepository;
+    private readonly IServiceItemService _serviceItemService;
     private readonly INotificationService _notificationService;
     private readonly ILogger<SettingsViewModel> _logger;
     private readonly AppDbContext _dbContext;
@@ -59,6 +62,15 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private bool _isVacuuming;
 
+    // New service form
+    [ObservableProperty] private string _newServiceName = string.Empty;
+    [ObservableProperty] private decimal _newServicePrice;
+    [ObservableProperty] private ServiceCategory _newServiceCategory = ServiceCategory.Other;
+    [ObservableProperty] private bool _newServiceFlexiblePrice = true;
+
+    public IEnumerable<ServiceCategory> ServiceCategories =>
+        System.Enum.GetValues<ServiceCategory>();
+
     // Business Settings
     [ObservableProperty]
     private string _businessName = string.Empty;
@@ -82,6 +94,7 @@ public partial class SettingsViewModel : ObservableObject
         ISettingService settingService,
         IServiceItemRepository serviceItemRepository,
         IProductRepository productRepository,
+        IServiceItemService serviceItemService,
         INotificationService notificationService,
         ILogger<SettingsViewModel> logger,
         AppDbContext dbContext)
@@ -89,6 +102,7 @@ public partial class SettingsViewModel : ObservableObject
         _settingService = settingService;
         _serviceItemRepository = serviceItemRepository;
         _productRepository = productRepository;
+        _serviceItemService = serviceItemService;
         _notificationService = notificationService;
         _logger = logger;
         _dbContext = dbContext;
@@ -103,6 +117,7 @@ public partial class SettingsViewModel : ObservableObject
         UpdateProductPriceCommand = new RelayCommand(async () => await UpdateProductPriceAsync(), CanUpdateProductPrice);
         RefreshCommand = new RelayCommand(async () => await RefreshAsync());
         VacuumDatabaseCommand = new RelayCommand(async () => await VacuumDatabaseAsync(), () => !IsVacuuming);
+        AddServiceCommand = new RelayCommand(async () => await AddServiceAsync(), CanAddService);
     }
 
     public IRelayCommand LoadSettingsCommand { get; }
@@ -115,6 +130,7 @@ public partial class SettingsViewModel : ObservableObject
     public IRelayCommand UpdateProductPriceCommand { get; }
     public IRelayCommand RefreshCommand { get; }
     public IRelayCommand VacuumDatabaseCommand { get; }
+    public IRelayCommand AddServiceCommand { get; }
 
     public async Task InitializeAsync()
     {
@@ -347,6 +363,37 @@ public partial class SettingsViewModel : ObservableObject
         await LoadProductsAsync();
         await LoadBusinessSettingsAsync();
         RefreshDatabaseSize();
+    }
+
+    private bool CanAddService() => !string.IsNullOrWhiteSpace(NewServiceName) && NewServicePrice >= 0;
+
+    private async Task AddServiceAsync()
+    {
+        try
+        {
+            if (!CanAddService()) return;
+
+            var item = new ServiceItem
+            {
+                Name = NewServiceName.Trim(),
+                DefaultPrice = NewServicePrice,
+                Category = NewServiceCategory,
+                IsFlexiblePrice = NewServiceFlexiblePrice,
+                IsActive = true
+            };
+
+            await _serviceItemService.CreateServiceItemAsync(item);
+            _notificationService.ShowSuccess($"Service '{item.Name}' added — it will now appear on the POS screen");
+            NewServiceName = string.Empty;
+            NewServicePrice = 0;
+            NewServiceCategory = ServiceCategory.Other;
+            await LoadServiceItemsAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding service");
+            _notificationService.ShowError("Error adding service");
+        }
     }
 
     private async Task VacuumDatabaseAsync()

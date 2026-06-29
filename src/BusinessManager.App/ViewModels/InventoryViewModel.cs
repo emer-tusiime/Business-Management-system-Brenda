@@ -12,6 +12,7 @@ public partial class InventoryViewModel : ObservableObject
 {
     private readonly IInventoryService _inventoryService;
     private readonly IProductRepository _productRepository;
+    private readonly IProductService _productService;
     private readonly INotificationService _notificationService;
     private readonly ILogger<InventoryViewModel> _logger;
     private readonly User _currentUser;
@@ -52,6 +53,14 @@ public partial class InventoryViewModel : ObservableObject
     [ObservableProperty]
     private bool _isLoading;
 
+    // New product form
+    [ObservableProperty] private string _newProductName = string.Empty;
+    [ObservableProperty] private decimal _newProductSellingPrice;
+    [ObservableProperty] private decimal _newProductBuyingPrice;
+    [ObservableProperty] private int _newProductInitialStock;
+    [ObservableProperty] private string _newProductUnit = "pcs";
+    [ObservableProperty] private bool _showNewProductForm;
+
     [ObservableProperty]
     private DateTime _filterStartDate = DateTime.Today.AddDays(-30);
 
@@ -61,12 +70,14 @@ public partial class InventoryViewModel : ObservableObject
     public InventoryViewModel(
         IInventoryService inventoryService,
         IProductRepository productRepository,
+        IProductService productService,
         INotificationService notificationService,
         ILogger<InventoryViewModel> logger,
         User currentUser)
     {
         _inventoryService = inventoryService;
         _productRepository = productRepository;
+        _productService = productService;
         _notificationService = notificationService;
         _logger = logger;
         _currentUser = currentUser;
@@ -78,6 +89,7 @@ public partial class InventoryViewModel : ObservableObject
         AdjustStockCommand = new RelayCommand(async () => await AdjustStockAsync(), CanAdjustStock);
         RefreshCommand = new RelayCommand(async () => await RefreshAsync());
         SearchCommand = new RelayCommand(async () => await FilterProductsAsync());
+        AddNewProductCommand = new RelayCommand(async () => await AddNewProductAsync(), CanAddNewProduct);
     }
 
     public IRelayCommand LoadProductsCommand { get; }
@@ -87,6 +99,7 @@ public partial class InventoryViewModel : ObservableObject
     public IRelayCommand AdjustStockCommand { get; }
     public IRelayCommand RefreshCommand { get; }
     public IRelayCommand SearchCommand { get; }
+    public IRelayCommand AddNewProductCommand { get; }
 
     public async Task InitializeAsync()
     {
@@ -290,6 +303,50 @@ public partial class InventoryViewModel : ObservableObject
         MovementQuantity = 1;
         MovementUnitCost = 0;
         MovementType = InventoryMovementType.StockIn;
+    }
+
+    private bool CanAddNewProduct() => !string.IsNullOrWhiteSpace(NewProductName) && NewProductSellingPrice > 0;
+
+    private async Task AddNewProductAsync()
+    {
+        try
+        {
+            if (!CanAddNewProduct()) return;
+
+            var product = new Product
+            {
+                Name = NewProductName.Trim(),
+                SellingPrice = NewProductSellingPrice,
+                BuyingPrice = NewProductBuyingPrice,
+                CostPrice = NewProductBuyingPrice,
+                CurrentStock = NewProductInitialStock,
+                ReorderLevel = 5,
+                Unit = string.IsNullOrWhiteSpace(NewProductUnit) ? "pcs" : NewProductUnit.Trim(),
+                IsActive = true
+            };
+
+            await _productService.CreateProductAsync(product);
+
+            if (NewProductInitialStock > 0)
+            {
+                await _inventoryService.AddStockAsync(product.Id, NewProductInitialStock,
+                    NewProductBuyingPrice, "Initial stock", _currentUser.Id);
+            }
+
+            _notificationService.ShowSuccess($"Product '{product.Name}' added successfully");
+            NewProductName = string.Empty;
+            NewProductSellingPrice = 0;
+            NewProductBuyingPrice = 0;
+            NewProductInitialStock = 0;
+            NewProductUnit = "pcs";
+            ShowNewProductForm = false;
+            await LoadProductsAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding new product");
+            _notificationService.ShowError("Error adding product");
+        }
     }
 
     private async Task FilterProductsAsync()

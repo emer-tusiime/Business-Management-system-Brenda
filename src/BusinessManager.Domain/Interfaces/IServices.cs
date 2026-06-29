@@ -114,3 +114,39 @@ public interface INotificationService
     Task<bool> ShowConfirmationAsync(string message);
     bool ShowConfirmation(string message);
 }
+
+public interface ISavingService
+{
+    Task<Saving> CreateSavingAsync(Saving saving);
+    Task<IEnumerable<Saving>> GetSavingsByDateRangeAsync(DateTime startDate, DateTime endDate);
+    Task<decimal> GetTodaySavingsAsync();
+    Task<decimal> GetTotalSavingsAsync(DateTime startDate, DateTime endDate);
+    Task<bool> DeleteSavingAsync(int id);
+}
+
+public interface IClientOrderService
+{
+    Task<ClientOrder> CreateOrderAsync(ClientOrder order);
+    Task<ClientOrder?> GetOrderByIdAsync(int id);
+    Task<IEnumerable<ClientOrder>> GetAllOrdersAsync();
+    Task<IEnumerable<ClientOrder>> GetPendingOrdersAsync();
+    Task<IEnumerable<ClientOrder>> GetDueTodayAsync();
+    Task<IEnumerable<ClientOrder>> GetOverdueAsync();
+    Task<ClientOrder> UpdateStatusAsync(int orderId, OrderStatus status);
+    Task<ClientOrder> UpdateOrderAsync(ClientOrder order);
+    Task<bool> DeleteOrderAsync(int id);
+}
+
+public interface IProductService
+{
+    Task<Product> CreateProductAsync(Product product);
+    Task<Product> UpdateProductAsync(Product product);
+    Task<bool> DeleteProductAsync(int id);
+}
+
+public interface IServiceItemService
+{
+    Task<ServiceItem> CreateServiceItemAsync(ServiceItem item);
+    Task<ServiceItem> UpdateServiceItemAsync(ServiceItem item);
+    Task<bool> DeleteServiceItemAsync(int id);
+}

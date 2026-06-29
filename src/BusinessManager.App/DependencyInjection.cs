@@ -6,8 +6,10 @@ using BusinessManager.App.Views.Backup;
 using BusinessManager.App.Views.Dashboard;
 using BusinessManager.App.Views.Expenses;
 using BusinessManager.App.Views.Inventory;
+using BusinessManager.App.Views.Orders;
 using BusinessManager.App.Views.Reports;
 using BusinessManager.App.Views.Sales;
+using BusinessManager.App.Views.Savings;
 using BusinessManager.App.Views.Settings;
 
 namespace BusinessManager.App;
@@ -18,6 +20,7 @@ public static class DependencyInjection
     {
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<IDialogService, DialogService>();
+        services.AddSingleton<NotificationCenter>();
 
         services.AddTransient<LoginWindow>();
         services.AddTransient<LoginViewModel>();
@@ -28,6 +31,7 @@ public static class DependencyInjection
             sp.GetRequiredService<BusinessManager.Domain.Interfaces.IInventoryService>(),
             sp.GetRequiredService<BusinessManager.Domain.Interfaces.IDebtorService>(),
             sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<DashboardViewModel>>()));
+
         services.AddTransient<SalesView>();
         services.AddTransient<ExpensesView>();
         services.AddTransient<InventoryView>();
@@ -37,6 +41,8 @@ public static class DependencyInjection
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<BackupView>();
         services.AddTransient<BackupRestoreViewModel>();
+        services.AddTransient<SavingsView>();
+        services.AddTransient<OrdersView>();
 
         return services;
     }

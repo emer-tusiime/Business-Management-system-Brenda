@@ -19,7 +19,15 @@ public enum ServiceCategory
     Branding = 9,
     Fridge = 10,
     Scanning = 11,
-    Laminating = 12
+    Laminating = 12,
+    Other = 99
+}
+
+public enum OrderStatus
+{
+    Pending = 1,
+    Ready = 2,
+    Delivered = 3
 }
 
 public enum TransactionType

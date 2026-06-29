@@ -30,6 +30,8 @@ public static class DependencyInjection
         services.AddSingleton<ISaleItemRepository, SaleItemRepository>();
         services.AddSingleton<IExpenseRepository, ExpenseRepository>();
         services.AddSingleton<IDebtorRepository, DebtorRepository>();
+        services.AddSingleton<ISavingRepository, SavingRepository>();
+        services.AddSingleton<IClientOrderRepository, ClientOrderRepository>();
         services.AddSingleton<IExpenseCategoryRepository, ExpenseCategoryRepository>();
         services.AddSingleton<IInventoryMovementRepository, InventoryMovementRepository>();
         services.AddSingleton<ISettingRepository, SettingRepository>();

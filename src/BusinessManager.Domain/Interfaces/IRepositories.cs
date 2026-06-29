@@ -96,3 +96,19 @@ public interface IDebtorRepository : IRepository<Debtor>
     Task<decimal> GetPaymentsTotalForDateRangeAsync(DateTime startDate, DateTime endDate);
     Task AddPaymentAsync(DebtPayment payment);
 }
+
+public interface ISavingRepository : IRepository<Saving>
+{
+    Task<IEnumerable<Saving>> GetByDateRangeAsync(DateTime startDate, DateTime endDate);
+    Task<decimal> GetTotalForDateAsync(DateTime date);
+    Task<decimal> GetTotalForDateRangeAsync(DateTime startDate, DateTime endDate);
+}
+
+public interface IClientOrderRepository : IRepository<ClientOrder>
+{
+    Task<IEnumerable<ClientOrder>> GetByStatusAsync(OrderStatus status);
+    Task<IEnumerable<ClientOrder>> GetDueTodayAsync();
+    Task<IEnumerable<ClientOrder>> GetOverdueAsync();
+    Task<IEnumerable<ClientOrder>> GetByDateRangeAsync(DateTime startDate, DateTime endDate);
+    Task<IEnumerable<ClientOrder>> GetPendingAsync();
+}

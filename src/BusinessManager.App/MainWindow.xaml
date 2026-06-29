@@ -31,6 +31,25 @@
                                Foreground="White" VerticalAlignment="Center"/>
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Notification Bell -->
+                    <Grid Margin="0,0,4,0">
+                        <Button x:Name="NotificationButton"
+                                Style="{StaticResource MaterialDesignIconButton}"
+                                Click="NotificationButton_Click"
+                                ToolTip="Notifications" Foreground="White">
+                            <materialDesign:PackIcon Kind="Bell" Width="20" Height="20"/>
+                        </Button>
+                        <Border x:Name="NotificationBadge"
+                                Background="#EF5350" CornerRadius="8"
+                                MinWidth="16" Height="16"
+                                HorizontalAlignment="Right" VerticalAlignment="Top"
+                                Margin="0,0,0,0" Padding="3,0"
+                                Visibility="Collapsed">
+                            <TextBlock x:Name="NotificationCount" Text="0"
+                                       FontSize="9" FontWeight="Bold"
+                                       Foreground="White" HorizontalAlignment="Center"/>
+                        </Border>
+                    </Grid>
                     <materialDesign:PackIcon Kind="Account" Width="18" Height="18"
                                              Foreground="#BBDEFB" VerticalAlignment="Center"
                                              Margin="0,0,6,0"/>
@@ -137,6 +156,30 @@
                             </StackPanel>
                         </Button>
 
+                        <!-- Savings -->
+                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                Click="NavigateToSavings"
+                                Foreground="White" HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Height="58" Padding="0" Margin="0,1" ToolTip="Savings">
+                            <StackPanel HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="PiggyBank" Width="22" Height="22" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Savings" FontSize="8" HorizontalAlignment="Center" Margin="0,3,0,0" Opacity="0.85"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Orders -->
+                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                Click="NavigateToOrders"
+                                Foreground="White" HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Height="58" Padding="0" Margin="0,1" ToolTip="Client Orders">
+                            <StackPanel HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="ClipboardList" Width="22" Height="22" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Orders" FontSize="8" HorizontalAlignment="Center" Margin="0,3,0,0" Opacity="0.85"/>
+                            </StackPanel>
+                        </Button>
+
                         <!-- Divider -->
                         <Rectangle Height="1" Fill="#30FFFFFF" Margin="10,8,10,8"/>
 
@@ -222,6 +265,66 @@
             <!-- ===== MAIN CONTENT ===== -->
             <ContentControl x:Name="MainContent" Grid.Column="1" Margin="0"/>
         </Grid>
+
+        <!-- Notification popup panel -->
+        <Popup x:Name="NotificationPopup" StaysOpen="False" Placement="Bottom"
+               PlacementTarget="{Binding ElementName=NotificationButton}"
+               AllowsTransparency="True">
+            <Border Background="White" CornerRadius="10" Width="340"
+                    BorderBrush="#E2E8F0" BorderThickness="1">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.18"/>
+                </Border.Effect>
+                <StackPanel>
+                    <DockPanel Margin="14,10">
+                        <TextBlock Text="Notifications" FontSize="14" FontWeight="Bold" Foreground="#0F172A"/>
+                        <Button DockPanel.Dock="Right" Style="{StaticResource MaterialDesignFlatButton}"
+                                Click="MarkAllNotificationsRead_Click"
+                                FontSize="11" Foreground="#1565C0" Padding="4,0">
+                            Mark all read
+                        </Button>
+                    </DockPanel>
+                    <Separator/>
+                    <ItemsControl x:Name="NotificationList" MaxHeight="340">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="14,10" BorderBrush="#F1F5F9" BorderThickness="0,0,0,1">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Width="18" Height="18"
+                                                                 VerticalAlignment="Top" Margin="0,2,10,0">
+                                            <materialDesign:PackIcon.Style>
+                                                <Style TargetType="materialDesign:PackIcon">
+                                                    <Setter Property="Kind" Value="BellAlert"/>
+                                                    <Setter Property="Foreground" Value="#D97706"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Kind}" Value="Urgent">
+                                                            <Setter Property="Foreground" Value="#DC2626"/>
+                                                            <Setter Property="Kind" Value="AlertCircle"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </materialDesign:PackIcon.Style>
+                                        </materialDesign:PackIcon>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="12" Foreground="#111827"/>
+                                            <TextBlock Text="{Binding Message}" FontSize="12" Foreground="#6B7280" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Border Padding="14,10" x:Name="NoNotificationsPanel">
+                        <TextBlock Text="No pending notifications" Foreground="#9CA3AF"
+                                   FontSize="12" HorizontalAlignment="Center"/>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </Popup>
 
         <!-- Toast notifications -->
         <materialDesign:Snackbar x:Name="MainSnackbar"

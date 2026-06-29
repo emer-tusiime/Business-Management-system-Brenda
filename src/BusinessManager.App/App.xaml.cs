@@ -76,6 +76,7 @@ public partial class App : System.Windows.Application
             await context.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys=ON;");
 
             await EnsureDebtorsSchemaAsync(context);
+            await EnsureNewTablesAsync(context);
             await SeedDataAsync(scope.ServiceProvider);
 
             _ = Task.Run(async () =>
@@ -128,6 +129,38 @@ public partial class App : System.Windows.Application
                 "UserId" INTEGER NOT NULL,
                 "CreatedAt" TEXT NOT NULL,
                 FOREIGN KEY("DebtorId") REFERENCES "Debtors"("Id") ON DELETE CASCADE,
+                FOREIGN KEY("UserId") REFERENCES "Users"("Id")
+            );
+            """);
+    }
+
+    private async Task EnsureNewTablesAsync(AppDbContext context)
+    {
+        await context.Database.ExecuteSqlRawAsync("""
+            CREATE TABLE IF NOT EXISTS "Savings" (
+                "Id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                "Date" TEXT NOT NULL,
+                "Amount" REAL NOT NULL,
+                "Notes" TEXT NULL,
+                "UserId" INTEGER NOT NULL,
+                "CreatedAt" TEXT NOT NULL,
+                FOREIGN KEY("UserId") REFERENCES "Users"("Id")
+            );
+            """);
+
+        await context.Database.ExecuteSqlRawAsync("""
+            CREATE TABLE IF NOT EXISTS "ClientOrders" (
+                "Id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                "ClientName" TEXT NOT NULL,
+                "Phone" TEXT NULL,
+                "Description" TEXT NOT NULL,
+                "OrderDate" TEXT NOT NULL,
+                "PickupDate" TEXT NOT NULL,
+                "Status" INTEGER NOT NULL DEFAULT 1,
+                "Notes" TEXT NULL,
+                "UserId" INTEGER NOT NULL,
+                "CreatedAt" TEXT NOT NULL,
+                "UpdatedAt" TEXT NULL,
                 FOREIGN KEY("UserId") REFERENCES "Users"("Id")
             );
             """);

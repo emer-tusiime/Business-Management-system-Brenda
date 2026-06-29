@@ -481,3 +481,42 @@ public class DebtPaymentConfiguration : IEntityTypeConfiguration<DebtPayment>
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
+
+public class SavingConfiguration : IEntityTypeConfiguration<Saving>
+{
+    public void Configure(EntityTypeBuilder<Saving> builder)
+    {
+        builder.ToTable("Savings");
+        builder.HasKey(s => s.Id);
+        builder.Property(s => s.Amount).HasPrecision(18, 2);
+        builder.Property(s => s.Notes).HasMaxLength(500);
+        builder.Property(s => s.Date).IsRequired();
+
+        builder.HasOne(s => s.User)
+            .WithMany()
+            .HasForeignKey(s => s.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class ClientOrderConfiguration : IEntityTypeConfiguration<ClientOrder>
+{
+    public void Configure(EntityTypeBuilder<ClientOrder> builder)
+    {
+        builder.ToTable("ClientOrders");
+        builder.HasKey(o => o.Id);
+        builder.Property(o => o.ClientName).IsRequired().HasMaxLength(100);
+        builder.Property(o => o.Phone).HasMaxLength(20);
+        builder.Property(o => o.Description).IsRequired().HasMaxLength(500);
+        builder.Property(o => o.Notes).HasMaxLength(500);
+        builder.Property(o => o.Status).HasConversion<int>();
+
+        builder.Ignore(o => o.IsOverdue);
+        builder.Ignore(o => o.IsDueToday);
+
+        builder.HasOne(o => o.User)
+            .WithMany()
+            .HasForeignKey(o => o.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}

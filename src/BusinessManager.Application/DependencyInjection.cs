@@ -18,6 +18,10 @@ public static class DependencyInjection
         services.AddSingleton<ISaleService, SaleService>();
         services.AddSingleton<IExpenseService, ExpenseService>();
         services.AddSingleton<IDebtorService, DebtorService>();
+        services.AddSingleton<ISavingService, SavingService>();
+        services.AddSingleton<IClientOrderService, ClientOrderService>();
+        services.AddSingleton<IProductService, ProductService>();
+        services.AddSingleton<IServiceItemService, ServiceItemService>();
         services.AddSingleton<DbAccessGate>();
         services.AddSingleton<IInventoryService, InventoryService>();
         services.AddSingleton<IReportService, ReportService>();
