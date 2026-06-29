@@ -404,9 +404,11 @@ public class DebtorRepository : Repository<Debtor>, IDebtorRepository
 
     public async Task<decimal> GetTotalOutstandingAsync()
     {
-        return await _dbSet
+        var rows = await _dbSet
             .Where(d => d.TotalAmount > d.AmountPaid)
-            .SumAsync(d => d.TotalAmount - d.AmountPaid);
+            .Select(d => new { d.TotalAmount, d.AmountPaid })
+            .ToListAsync();
+        return rows.Sum(d => d.TotalAmount - d.AmountPaid);
     }
 
     public async Task<decimal> GetPaymentsTotalForDateRangeAsync(DateTime startDate, DateTime endDate)
@@ -414,9 +416,11 @@ public class DebtorRepository : Repository<Debtor>, IDebtorRepository
         var rangeStart = startDate.Date;
         var rangeEndExclusive = endDate.Date.AddDays(1);
 
-        return await _context.Set<DebtPayment>()
+        var amounts = await _context.Set<DebtPayment>()
             .Where(p => p.PaymentDate >= rangeStart && p.PaymentDate < rangeEndExclusive)
-            .SumAsync(p => p.Amount);
+            .Select(p => p.Amount)
+            .ToListAsync();
+        return amounts.Sum();
     }
 
     public async Task AddPaymentAsync(DebtPayment payment)

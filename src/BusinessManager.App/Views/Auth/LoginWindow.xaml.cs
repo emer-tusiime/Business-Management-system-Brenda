@@ -36,7 +36,7 @@ public partial class LoginWindow : Window
 
     private void OnLoginFailed(string errorMessage)
     {
-        ErrorMessageText.Visibility = Visibility.Visible;
+        // ErrorMessage binding on the ViewModel drives visibility via BooleanToVisibilityConverter
     }
 
     private void LoginButton_Click(object sender, RoutedEventArgs e)

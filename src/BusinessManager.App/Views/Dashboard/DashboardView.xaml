@@ -3,320 +3,435 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
-             mc:Ignorable="d" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             d:DesignHeight="800" d:DesignWidth="1000">
+             d:DesignHeight="900" d:DesignWidth="1200"
+             Background="#F1F5F9">
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        
-        <!-- Header -->
-        <Grid Grid.Row="0" Margin="0,0,0,16">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            
-            <StackPanel Grid.Column="0">
-                <TextBlock Text="Dashboard"
-                           Style="{StaticResource MaterialDesignHeadline5TextBlock}"/>
-                <TextBlock Text="{Binding LastUpdated, StringFormat='Last updated: {0}'}"
-                           Style="{StaticResource MaterialDesignBody2TextBlock}"
-                           Opacity="0.7"/>
-            </StackPanel>
-            
-            <!-- Refresh Button -->
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-                <Button Command="{Binding LoadDataCommand}"
-                        Style="{StaticResource MaterialDesignOutlinedButton}">
+
+        <!-- ===== PAGE HEADER ===== -->
+        <Border Grid.Row="0" Background="White"
+                BorderBrush="#E2E8F0" BorderThickness="0,0,0,1"
+                Padding="24,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Dashboard"
+                               FontSize="22" FontWeight="Bold"
+                               Foreground="#0F172A"/>
+                    <TextBlock Text="{Binding LastUpdated, StringFormat='Last updated: {0}'}"
+                               FontSize="12" Foreground="#64748B"
+                               Margin="0,2,0,0"/>
+                </StackPanel>
+                <Button Grid.Column="1"
+                        Command="{Binding LoadDataCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        VerticalAlignment="Center"
+                        Padding="16,8">
                     <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="Refresh" 
-                                                Margin="0,0,8,0"/>
-                        <TextBlock Text="Refresh"/>
+                        <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16"
+                                                 Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Refresh" FontSize="13" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
-            </StackPanel>
-        </Grid>
-        
-        <!-- Summary Cards -->
-        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-            <StackPanel>
-                <!-- Today's Summary -->
-                <TextBlock Text="Today's Summary"
-                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
-                           Margin="0,0,0,16"/>
-                
-                <Grid Margin="0,0,0,24">
+            </Grid>
+        </Border>
+
+        <!-- ===== SCROLLABLE CONTENT ===== -->
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="24,20,24,24">
+
+                <!-- ── TODAY'S PERFORMANCE ── -->
+                <TextBlock Text="TODAY'S PERFORMANCE"
+                           FontSize="11" FontWeight="Bold"
+                           Foreground="#64748B"
+                           Margin="2,0,0,12"/>
+
+                <Grid Margin="0,0,0,20">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    
-                    <!-- Today Income -->
-                    <materialDesign:Card Grid.Column="0" 
-                                         Margin="0,0,8,0"
-                                         Background="LightBlue">
-                        <StackPanel Margin="16">
-                            <materialDesign:PackIcon Kind="TrendingUp" 
-                                                    Width="24" Height="24"
-                                                    Margin="0,0,0,8"/>
-                            <TextBlock Text="Total Made Today"
-                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
-                                       Opacity="0.8"/>
-                            <TextBlock Text="{Binding Summary.TodayIncome, StringFormat='{}{0:N0} UGX'}"
-                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
-                            <TextBlock Text="All sales recorded today"
-                                       Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                                       Opacity="0.7"
-                                       Margin="0,4,0,0"/>
-                        </StackPanel>
-                    </materialDesign:Card>
-                    
-                    <!-- Today Expenses -->
-                    <materialDesign:Card Grid.Column="1" 
-                                         Margin="8,0,8,0"
-                                         Background="LightCoral">
-                        <StackPanel Margin="16">
-                            <materialDesign:PackIcon Kind="TrendingDown" 
-                                                    Width="24" Height="24"
-                                                    Margin="0,0,0,8"/>
-                            <TextBlock Text="Expenses Today"
-                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
-                                       Opacity="0.8"/>
-                            <TextBlock Text="{Binding Summary.TodayExpenses, StringFormat='{}{0:N0} UGX'}"
-                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
-                        </StackPanel>
-                    </materialDesign:Card>
-                    
-                    <!-- Cash in Drawer -->
-                    <materialDesign:Card Grid.Column="2" 
-                                         Margin="8,0,0,0"
-                                         Background="Gold">
-                        <StackPanel Margin="16">
-                            <materialDesign:PackIcon Kind="CashRegister" 
-                                                    Width="24" Height="24"
-                                                    Margin="0,0,0,8"/>
-                            <TextBlock Text="Cash in Drawer"
-                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
-                                       Opacity="0.8"/>
-                            <TextBlock Text="{Binding Summary.DrawerBalance, StringFormat='{}{0:N0} UGX'}"
-                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
-                            <TextBlock Text="Sales today minus expenses"
-                                       Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                                       Opacity="0.7"
-                                       Margin="0,4,0,0"/>
-                        </StackPanel>
-                    </materialDesign:Card>
-                </Grid>
-                
-                <!-- Weekly Summary -->
-                <TextBlock Text="This Week's Summary"
-                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
-                           Margin="0,0,0,16"/>
-                
-                <Grid Margin="0,0,0,24">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    
-                    <materialDesign:Card Grid.Column="0" 
-                                         Margin="0,0,8,0"
-                                         Background="LightBlue">
-                        <StackPanel Margin="16">
-                            <materialDesign:PackIcon Kind="CalendarWeek" 
-                                                    Width="24" Height="24"
-                                                    Margin="0,0,0,8"/>
-                            <TextBlock Text="Income This Week"
-                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
-                                       Opacity="0.8"/>
-                            <TextBlock Text="{Binding Summary.ThisWeekIncome, StringFormat='{}{0:N0} UGX'}"
-                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
-                        </StackPanel>
-                    </materialDesign:Card>
-                    
-                    <materialDesign:Card Grid.Column="1" 
-                                         Margin="8,0,0,0"
-                                         Background="LightCoral">
-                        <StackPanel Margin="16">
-                            <materialDesign:PackIcon Kind="Receipt" 
-                                                    Width="24" Height="24"
-                                                    Margin="0,0,0,8"/>
-                            <TextBlock Text="Expenses This Week"
-                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
-                                       Opacity="0.8"/>
-                            <TextBlock Text="{Binding Summary.ThisWeekExpenses, StringFormat='{}{0:N0} UGX'}"
-                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
-                        </StackPanel>
-                    </materialDesign:Card>
-                </Grid>
-                
-                <!-- Monthly Summary -->
-                <TextBlock Text="Monthly Summary"
-                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
-                           Margin="0,0,0,16"/>
-                
-                <Grid Margin="0,0,0,24">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    
-                    <materialDesign:Card Grid.Column="0" 
-                                         Margin="0,0,8,0"
-                                         Background="LightBlue">
-                        <StackPanel Margin="16">
-                            <materialDesign:PackIcon Kind="CalendarMonth" 
-                                                    Width="24" Height="24"
-                                                    Margin="0,0,0,8"/>
-                            <TextBlock Text="Income"
-                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
-                                       Opacity="0.8"/>
-                            <TextBlock Text="{Binding Summary.ThisMonthIncome, StringFormat='{}{0:N0} UGX'}"
-                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
-                        </StackPanel>
-                    </materialDesign:Card>
-                    
-                    <materialDesign:Card Grid.Column="1" 
-                                         Margin="8,0,0,0"
-                                         Background="LightCoral">
-                        <StackPanel Margin="16">
-                            <materialDesign:PackIcon Kind="Receipt" 
-                                                    Width="24" Height="24"
-                                                    Margin="0,0,0,8"/>
-                            <TextBlock Text="Expenses"
-                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
-                                       Opacity="0.8"/>
-                            <TextBlock Text="{Binding Summary.ThisMonthExpenses, StringFormat='{}{0:N0} UGX'}"
-                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
-                        </StackPanel>
-                    </materialDesign:Card>
+
+                    <!-- TODAY INCOME – Blue -->
+                    <Border Grid.Column="0" CornerRadius="12" Padding="20,18" Margin="0,0,8,0">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,1" EndPoint="1,0">
+                                <GradientStop Color="#1565C0" Offset="0"/>
+                                <GradientStop Color="#42A5F5" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.22" Direction="270"/>
+                        </Border.Effect>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <materialDesign:PackIcon Grid.Column="1" Kind="TrendingUp"
+                                                     Width="36" Height="36"
+                                                     Foreground="White" Opacity="0.35"
+                                                     VerticalAlignment="Top"/>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="TOTAL MADE TODAY"
+                                           FontSize="10" FontWeight="Bold"
+                                           Foreground="White" Opacity="0.8"/>
+                                <TextBlock Text="{Binding Summary.TodayIncome, StringFormat='{}{0:N0}'}"
+                                           FontSize="28" FontWeight="Bold"
+                                           Foreground="White" Margin="0,8,0,0"/>
+                                <TextBlock Text="UGX — all sales today"
+                                           FontSize="11" Foreground="White" Opacity="0.65"
+                                           Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- TODAY EXPENSES – Red -->
+                    <Border Grid.Column="1" CornerRadius="12" Padding="20,18" Margin="8,0,8,0">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,1" EndPoint="1,0">
+                                <GradientStop Color="#B71C1C" Offset="0"/>
+                                <GradientStop Color="#EF5350" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.22" Direction="270"/>
+                        </Border.Effect>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <materialDesign:PackIcon Grid.Column="1" Kind="TrendingDown"
+                                                     Width="36" Height="36"
+                                                     Foreground="White" Opacity="0.35"
+                                                     VerticalAlignment="Top"/>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="EXPENSES TODAY"
+                                           FontSize="10" FontWeight="Bold"
+                                           Foreground="White" Opacity="0.8"/>
+                                <TextBlock Text="{Binding Summary.TodayExpenses, StringFormat='{}{0:N0}'}"
+                                           FontSize="28" FontWeight="Bold"
+                                           Foreground="White" Margin="0,8,0,0"/>
+                                <TextBlock Text="UGX — spent today"
+                                           FontSize="11" Foreground="White" Opacity="0.65"
+                                           Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- CASH IN DRAWER – Green -->
+                    <Border Grid.Column="2" CornerRadius="12" Padding="20,18" Margin="8,0,8,0">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,1" EndPoint="1,0">
+                                <GradientStop Color="#1B5E20" Offset="0"/>
+                                <GradientStop Color="#43A047" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.22" Direction="270"/>
+                        </Border.Effect>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <materialDesign:PackIcon Grid.Column="1" Kind="CashRegister"
+                                                     Width="36" Height="36"
+                                                     Foreground="White" Opacity="0.35"
+                                                     VerticalAlignment="Top"/>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="CASH IN DRAWER"
+                                           FontSize="10" FontWeight="Bold"
+                                           Foreground="White" Opacity="0.8"/>
+                                <TextBlock Text="{Binding Summary.DrawerBalance, StringFormat='{}{0:N0}'}"
+                                           FontSize="28" FontWeight="Bold"
+                                           Foreground="White" Margin="0,8,0,0"/>
+                                <TextBlock Text="UGX — net balance"
+                                           FontSize="11" Foreground="White" Opacity="0.65"
+                                           Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- OUTSTANDING DEBTS – Purple -->
+                    <Border Grid.Column="3" CornerRadius="12" Padding="20,18" Margin="8,0,0,0">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,1" EndPoint="1,0">
+                                <GradientStop Color="#4A148C" Offset="0"/>
+                                <GradientStop Color="#AB47BC" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.22" Direction="270"/>
+                        </Border.Effect>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <materialDesign:PackIcon Grid.Column="1" Kind="AccountAlert"
+                                                     Width="36" Height="36"
+                                                     Foreground="White" Opacity="0.35"
+                                                     VerticalAlignment="Top"/>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="OUTSTANDING DEBTS"
+                                           FontSize="10" FontWeight="Bold"
+                                           Foreground="White" Opacity="0.8"/>
+                                <TextBlock Text="{Binding Summary.TotalOutstandingDebt, StringFormat='{}{0:N0}'}"
+                                           FontSize="28" FontWeight="Bold"
+                                           Foreground="White" Margin="0,8,0,0"/>
+                                <TextBlock Text="UGX — credit owed"
+                                           FontSize="11" Foreground="White" Opacity="0.65"
+                                           Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
                 </Grid>
 
-                <!-- Debtors Summary -->
-                <TextBlock Text="Credit / Debtors"
-                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
-                           Margin="0,0,0,16"/>
+                <!-- ── WEEKLY + MONTHLY SUMMARY ── -->
+                <Grid Margin="0,0,0,20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-                <materialDesign:Card Margin="0,0,0,24">
-                    <StackPanel Margin="16">
-                        <TextBlock Text="{Binding Summary.TotalOutstandingDebt, StringFormat='Total outstanding credit: {0:N0} UGX'}"
-                                   Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
-                                   Margin="0,0,0,12"/>
+                    <!-- This Week -->
+                    <Border Grid.Column="0" CornerRadius="10" Background="White"
+                            Margin="0,0,8,0" Padding="20,16">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.07" Direction="270"/>
+                        </Border.Effect>
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                                <Border Width="6" CornerRadius="3" Background="#1565C0"
+                                        Margin="0,0,10,0"/>
+                                <TextBlock Text="THIS WEEK"
+                                           FontSize="11" FontWeight="Bold"
+                                           Foreground="#64748B" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Income" FontSize="13" Foreground="#374151"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding Summary.ThisWeekIncome, StringFormat='{}{0:N0} UGX'}"
+                                           FontSize="14" FontWeight="Bold" Foreground="#1565C0"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Expenses" FontSize="13" Foreground="#374151"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding Summary.ThisWeekExpenses, StringFormat='{}{0:N0} UGX'}"
+                                           FontSize="14" FontWeight="Bold" Foreground="#C62828"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- This Month -->
+                    <Border Grid.Column="1" CornerRadius="10" Background="White"
+                            Margin="8,0,0,0" Padding="20,16">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.07" Direction="270"/>
+                        </Border.Effect>
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                                <Border Width="6" CornerRadius="3" Background="#2E7D32"
+                                        Margin="0,0,10,0"/>
+                                <TextBlock Text="THIS MONTH"
+                                           FontSize="11" FontWeight="Bold"
+                                           Foreground="#64748B" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Income" FontSize="13" Foreground="#374151"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding Summary.ThisMonthIncome, StringFormat='{}{0:N0} UGX'}"
+                                           FontSize="14" FontWeight="Bold" Foreground="#1565C0"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Expenses" FontSize="13" Foreground="#374151"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding Summary.ThisMonthExpenses, StringFormat='{}{0:N0} UGX'}"
+                                           FontSize="14" FontWeight="Bold" Foreground="#C62828"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- ── ANALYTICS CHARTS ── -->
+                <TextBlock Text="ANALYTICS &amp; INSIGHTS"
+                           FontSize="11" FontWeight="Bold"
+                           Foreground="#64748B"
+                           Margin="2,0,0,12"/>
+
+                <Grid Margin="0,0,0,20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" CornerRadius="10" Background="White"
+                            Margin="0,0,8,0" Padding="20,16">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.07" Direction="270"/>
+                        </Border.Effect>
+                        <StackPanel>
+                            <TextBlock Text="Income by Service"
+                                       FontSize="14" FontWeight="SemiBold"
+                                       Foreground="#0F172A" Margin="0,0,0,14"/>
+                            <lvc:PieChart Series="{Binding IncomeByModuleSeries}"
+                                          Height="230"
+                                          LegendPosition="Bottom"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="1" CornerRadius="10" Background="White"
+                            Margin="8,0,0,0" Padding="20,16">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.07" Direction="270"/>
+                        </Border.Effect>
+                        <StackPanel>
+                            <TextBlock Text="Monthly Trend — 6 months"
+                                       FontSize="14" FontWeight="SemiBold"
+                                       Foreground="#0F172A" Margin="0,0,0,14"/>
+                            <lvc:CartesianChart Series="{Binding MonthlyTrendSeries}"
+                                                Height="230"
+                                                XAxes="{Binding MonthlyTrendXAxes}"
+                                                YAxes="{Binding MonthlyTrendYAxes}"
+                                                LegendPosition="Bottom"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- ── CREDIT / DEBTORS ── -->
+                <TextBlock Text="CREDIT &amp; DEBTORS"
+                           FontSize="11" FontWeight="Bold"
+                           Foreground="#64748B"
+                           Margin="2,0,0,12"/>
+
+                <Border CornerRadius="10" Background="White"
+                        Padding="20,16" Margin="0,0,0,20">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.07" Direction="270"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Outstanding Credit"
+                                       FontSize="14" FontWeight="SemiBold"
+                                       Foreground="#0F172A" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding Summary.TotalOutstandingDebt, StringFormat='{}{0:N0} UGX'}"
+                                       FontSize="16" FontWeight="Bold"
+                                       Foreground="#6A1B9A"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
                         <DataGrid ItemsSource="{Binding Summary.CustomerDebts}"
                                   AutoGenerateColumns="False"
                                   CanUserAddRows="False"
                                   IsReadOnly="True"
                                   HeadersVisibility="Column"
                                   Style="{StaticResource MaterialDesignDataGrid}"
-                                  MaxHeight="200">
+                                  MaxHeight="180"
+                                  FontSize="12">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Customer" Binding="{Binding CustomerName}" Width="*"/>
-                                <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" Width="120"/>
-                                <DataGridTextColumn Header="Records" Binding="{Binding OpenRecords}" Width="70"/>
-                                <DataGridTextColumn Header="Amount Due" Binding="{Binding TotalOwed, StringFormat='{}{0:N0} UGX'}" Width="140"/>
+                                <DataGridTextColumn Header="Customer"
+                                                    Binding="{Binding CustomerName}" Width="*"/>
+                                <DataGridTextColumn Header="Phone"
+                                                    Binding="{Binding Phone}" Width="120"/>
+                                <DataGridTextColumn Header="Records"
+                                                    Binding="{Binding OpenRecords}" Width="70"/>
+                                <DataGridTextColumn Header="Amount Due"
+                                                    Binding="{Binding TotalOwed, StringFormat='{}{0:N0} UGX'}"
+                                                    Width="150">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="FontWeight" Value="Bold"/>
+                                            <Setter Property="Foreground" Value="#C62828"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
                             </DataGrid.Columns>
                         </DataGrid>
                     </StackPanel>
-                </materialDesign:Card>
-                
-                <!-- Charts Section -->
-                <TextBlock Text="Analytics &amp; Insights"
-                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
-                           Margin="0,0,0,16"/>
-                
-                <Grid Margin="0,0,0,24">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    
-                    <!-- Income by Module Chart -->
-                    <materialDesign:Card Grid.Column="0" 
-                                         Margin="0,0,8,0">
-                        <StackPanel Margin="16">
-                            <TextBlock Text="Income by Module"
-                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"
-                                       Margin="0,0,0,16"/>
-                            
-                            <lvc:PieChart 
-                                Series="{Binding IncomeByModuleSeries}"
-                                Width="300"
-                                Height="250"
-                                LegendPosition="Bottom"/>
-                        </StackPanel>
-                    </materialDesign:Card>
-                    
-                    <!-- Monthly Trend Chart -->
-                    <materialDesign:Card Grid.Column="1" 
-                                         Margin="8,0,0,0">
-                        <StackPanel Margin="16">
-                            <TextBlock Text="Monthly Trend"
-                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"
-                                       Margin="0,0,0,16"/>
-                            
-                            <lvc:CartesianChart 
-                                Series="{Binding MonthlyTrendSeries}"
-                                Width="300"
-                                Height="250"
-                                XAxes="{Binding MonthlyTrendXAxes}"
-                                YAxes="{Binding MonthlyTrendYAxes}"
-                                LegendPosition="Bottom"/>
-                        </StackPanel>
-                    </materialDesign:Card>
-                </Grid>
-                
-                <!-- Quick Actions -->
-                <TextBlock Text="Quick Actions"
-                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
-                           Margin="0,24,0,16"/>
-                
+                </Border>
+
+                <!-- ── QUICK ACTIONS ── -->
+                <TextBlock Text="QUICK ACTIONS"
+                           FontSize="11" FontWeight="Bold"
+                           Foreground="#64748B"
+                           Margin="2,0,0,12"/>
+
                 <WrapPanel>
-                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Margin="0,0,8,8"
+                    <Button Margin="0,0,10,10" Height="44" Padding="22,0"
+                            Background="#1565C0" BorderBrush="#1565C0" Foreground="White"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
                             Click="QuickAction_NewSale">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="PointOfSale"
-                                                    Margin="0,0,8,0"/>
-                            <TextBlock Text="New Sale"/>
+                            <materialDesign:PackIcon Kind="PointOfSale" Width="18" Height="18"
+                                                     Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="New Sale" FontSize="13" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-
-                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Margin="0,0,8,8"
+                    <Button Margin="0,0,10,10" Height="44" Padding="22,0"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
                             Click="QuickAction_AddExpense">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Receipt"
-                                                    Margin="0,0,8,0"/>
-                            <TextBlock Text="Add Expense"/>
+                            <materialDesign:PackIcon Kind="Receipt" Width="18" Height="18"
+                                                     Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Add Expense" FontSize="13" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-
-                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Margin="0,0,8,8"
+                    <Button Margin="0,0,10,10" Height="44" Padding="22,0"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
                             Click="QuickAction_Reports">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="FileChart"
-                                                    Margin="0,0,8,0"/>
-                            <TextBlock Text="Reports"/>
+                            <materialDesign:PackIcon Kind="FileChart" Width="18" Height="18"
+                                                     Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Reports" FontSize="13" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-
-                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Margin="0,0,8,8"
+                    <Button Margin="0,0,10,10" Height="44" Padding="22,0"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
                             Click="QuickAction_Inventory">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="PackageVariant"
-                                                    Margin="0,0,8,0"/>
-                            <TextBlock Text="Inventory"/>
+                            <materialDesign:PackIcon Kind="PackageVariant" Width="18" Height="18"
+                                                     Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Inventory" FontSize="13" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                 </WrapPanel>
+
             </StackPanel>
         </ScrollViewer>
     </Grid>

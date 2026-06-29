@@ -61,6 +61,7 @@ public interface IReportService
     Task<DailySummaryDto> GetDailySummaryAsync(DateTime date);
     Task<WeeklySummaryDto> GetWeeklySummaryAsync(DateTime date);
     Task<MonthlySummaryDto> GetMonthlySummaryAsync(int year, int month);
+    Task<List<MonthlyTrendDto>> GetMonthlyTrendAsync(int monthsBack);
     Task<IEnumerable<IncomeByModuleDto>> GetIncomeByModuleAsync(DateTime startDate, DateTime endDate);
     Task<IEnumerable<ExpenseByCategoryDto>> GetExpenseByCategoryAsync(DateTime startDate, DateTime endDate);
     Task<byte[]> GenerateDailyReportAsync(DateTime date);

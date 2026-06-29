@@ -197,7 +197,7 @@ public partial class InventoryViewModel : ObservableObject
 
     private bool CanAdjustStock()
     {
-        return SelectedProduct != null && MovementQuantity != 0;
+        return SelectedProduct != null && MovementQuantity > 0;
     }
 
     private async Task AddStockAsync()
@@ -326,9 +326,5 @@ public partial class InventoryViewModel : ObservableObject
         _ = FilterProductsAsync();
     }
 
-    partial void OnSearchTextChanged(string value)
-    {
-        // Debounce search
-        Task.Delay(300).ContinueWith(_ => FilterProductsAsync());
-    }
+    partial void OnSearchTextChanged(string value) => _ = FilterProductsAsync();
 }

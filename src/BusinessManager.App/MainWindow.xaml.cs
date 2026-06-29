@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using BusinessManager.App.Services;
 using BusinessManager.App.ViewModels;
 using BusinessManager.Domain.Entities;
-using BusinessManager.Domain.Enums;
 using BusinessManager.Domain.Interfaces;
 
 namespace BusinessManager.App;
@@ -28,53 +27,32 @@ public partial class MainWindow : Window
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        // Show welcome screen first
-        var welcomeWindow = _serviceProvider.GetRequiredService<Views.Welcome.WelcomeWindow>();
-        var result = welcomeWindow.ShowDialog();
-
-        if (result != true)
-        {
-            // User closed welcome window, exit application
-            System.Windows.Application.Current.Shutdown();
-            return;
-        }
-
-        // Show login screen
+        Hide(); // keep main window hidden until login is complete
         await ShowLoginAsync();
     }
 
     private async Task ShowLoginAsync()
     {
         var loginWindow = _serviceProvider.GetRequiredService<Views.Auth.LoginWindow>();
-        var result = loginWindow.ShowDialog();
-
-        if (result != true)
+        if (loginWindow.ShowDialog() != true)
         {
-            // User cancelled login or closed window
             System.Windows.Application.Current.Shutdown();
             return;
         }
 
-        // Get current user from login window
         _currentUser = loginWindow.CurrentUser;
         UpdateUIForCurrentUser();
-        
-        // Navigate to dashboard
         NavigateToDashboard(null, null);
+        Show(); // reveal main window only after successful login
     }
+
+    public MaterialDesignThemes.Wpf.SnackbarMessageQueue SnackbarQueue =>
+        (MaterialDesignThemes.Wpf.SnackbarMessageQueue)MainSnackbar.MessageQueue;
 
     private void UpdateUIForCurrentUser()
     {
         if (_currentUser != null)
-        {
             CurrentUserText.Text = _currentUser.FullName;
-            
-            // Show users menu only for admin
-            if (_currentUser.Role == UserRole.Admin)
-            {
-                UsersMenuButton.Visibility = Visibility.Visible;
-            }
-        }
     }
 
     private void MenuButton_Click(object sender, RoutedEventArgs e)
@@ -181,11 +159,6 @@ public partial class MainWindow : Window
     private void NavigateToSettings(object? sender, RoutedEventArgs? e)
     {
         _navigationService.NavigateTo<Views.Settings.SettingsView>();
-    }
-
-    private void NavigateToUsers(object? sender, RoutedEventArgs? e)
-    {
-        _navigationService.NavigateTo<Views.Users.UsersView>();
     }
 
     private void NavigateToBackup(object? sender, RoutedEventArgs? e)

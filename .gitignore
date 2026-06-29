@@ -27,3 +27,6 @@ Desktop.ini
 # Secrets
 appsettings.Development.json
 *.pfx
+
+# Publish output and installer binary (too large for git)
+dist/

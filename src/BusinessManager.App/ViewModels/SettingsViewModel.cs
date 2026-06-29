@@ -165,8 +165,12 @@ public partial class SettingsViewModel : ObservableObject
             BusinessAddress = await _settingService.GetSettingAsync("BusinessAddress") ?? "";
             BusinessPhone = await _settingService.GetSettingAsync("BusinessPhone") ?? "";
             BusinessEmail = await _settingService.GetSettingAsync("BusinessEmail") ?? "";
-            TaxRate = decimal.Parse(await _settingService.GetSettingAsync("TaxRate") ?? "15");
-            LowStockThreshold = int.Parse(await _settingService.GetSettingAsync("LowStockThreshold") ?? "10");
+
+            var taxRateStr = await _settingService.GetSettingAsync("TaxRate");
+            TaxRate = decimal.TryParse(taxRateStr, out var tr) ? tr : 15m;
+
+            var lowStockStr = await _settingService.GetSettingAsync("LowStockThreshold");
+            LowStockThreshold = int.TryParse(lowStockStr, out var ls) ? ls : 10;
         }
         catch (Exception ex)
         {

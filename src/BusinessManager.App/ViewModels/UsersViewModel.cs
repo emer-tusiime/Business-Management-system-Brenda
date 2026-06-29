@@ -302,9 +302,5 @@ public partial class UsersViewModel : ObservableObject
         }
     }
 
-    partial void OnSearchTextChanged(string value)
-    {
-        // Debounce search
-        Task.Delay(300).ContinueWith(_ => FilterUsersAsync());
-    }
+    partial void OnSearchTextChanged(string value) => _ = FilterUsersAsync();
 }

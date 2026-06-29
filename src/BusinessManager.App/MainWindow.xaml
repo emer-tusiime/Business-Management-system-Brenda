@@ -2,192 +2,232 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="Alinda Brenda - Business Manager" Height="800" Width="1200"
+        Title="Alinda Brenda - Business Manager"
+        Height="800" Width="1200"
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized">
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        
-        <!-- Header -->
-        <materialDesign:ColorZone Grid.Row="0" 
-                                  Mode="PrimaryMid" 
-                                  Padding="16">
-            <DockPanel>
-                <Button Style="{StaticResource MaterialDesignIconButton}"
-                        DockPanel.Dock="Left"
-                        Click="MenuButton_Click"
-                        Margin="0,0,16,0">
-                    <materialDesign:PackIcon Kind="Menu"/>
-                </Button>
-                
-                <TextBlock Text="Alinda Brenda"
-                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
-                           VerticalAlignment="Center"
-                           Foreground="White"/>
-                
-                <StackPanel Orientation="Horizontal" 
-                            DockPanel.Dock="Right">
+
+        <!-- ===== TOP HEADER ===== -->
+        <Border Grid.Row="0">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Color="#0D47A1" Offset="0"/>
+                    <GradientStop Color="#1976D2" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            <DockPanel Height="52" Margin="12,0">
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="Storefront" Width="24" Height="24"
+                                             Foreground="White" VerticalAlignment="Center"
+                                             Margin="0,0,10,0"/>
+                    <TextBlock Text="Alinda Brenda"
+                               FontSize="17" FontWeight="Bold"
+                               Foreground="White" VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="Account" Width="18" Height="18"
+                                             Foreground="#BBDEFB" VerticalAlignment="Center"
+                                             Margin="0,0,6,0"/>
                     <TextBlock x:Name="CurrentUserText"
                                Text="Admin"
-                               VerticalAlignment="Center"
-                               Margin="0,0,16,0"
-                               Foreground="White"/>
+                               FontSize="13" Foreground="White" Opacity="0.9"
+                               VerticalAlignment="Center" Margin="0,0,12,0"/>
                     <Button Style="{StaticResource MaterialDesignIconButton}"
-                            Click="LogoutButton_Click">
-                        <materialDesign:PackIcon Kind="Logout"/>
+                            Click="LogoutButton_Click"
+                            ToolTip="Logout" Foreground="White">
+                        <materialDesign:PackIcon Kind="LogoutVariant" Width="18" Height="18"/>
                     </Button>
                 </StackPanel>
             </DockPanel>
-        </materialDesign:ColorZone>
-        
-        <!-- Main Content -->
+        </Border>
+
+        <!-- ===== BODY ===== -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="250" MinWidth="200"/>
-                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="68"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            
-            <!-- Sidebar -->
-            <ScrollViewer Grid.Column="0" 
-                          VerticalScrollBarVisibility="Auto">
-                <StackPanel x:Name="SidebarMenu" 
-                            Margin="8">
-                    <!-- Dashboard -->
-                    <Button Style="{StaticResource MaterialDesignFlatButton}"
-                            Click="NavigateToDashboard"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Margin="4">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="ViewDashboard" 
-                                                   Margin="0,0,16,0"/>
-                            <TextBlock Text="Dashboard"/>
-                        </StackPanel>
-                    </Button>
-                    
-                    <!-- Sales -->
-                    <Button Style="{StaticResource MaterialDesignFlatButton}"
-                            Click="NavigateToSales"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Margin="4">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="PointOfSale" 
-                                                   Margin="0,0,16,0"/>
-                            <TextBlock Text="Sales"/>
-                        </StackPanel>
-                    </Button>
-                    
-                    <!-- Expenses -->
-                    <Button Style="{StaticResource MaterialDesignFlatButton}"
-                            Click="NavigateToExpenses"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Margin="4">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Receipt" 
-                                                   Margin="0,0,16,0"/>
-                            <TextBlock Text="Expenses"/>
-                        </StackPanel>
-                    </Button>
 
-                    <!-- Debtors -->
-                    <Button Style="{StaticResource MaterialDesignFlatButton}"
-                            Click="NavigateToDebtors"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Margin="4">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="AccountCash"
-                                                   Margin="0,0,16,0"/>
-                            <TextBlock Text="Debtors"/>
-                        </StackPanel>
-                    </Button>
-                    
-                    <!-- Inventory -->
-                    <Button Style="{StaticResource MaterialDesignFlatButton}"
-                            Click="NavigateToInventory"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Margin="4">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="PackageVariant" 
-                                                   Margin="0,0,16,0"/>
-                            <TextBlock Text="Inventory"/>
-                        </StackPanel>
-                    </Button>
-                    
-                    <!-- Reports -->
-                    <Button Style="{StaticResource MaterialDesignFlatButton}"
-                            Click="NavigateToReports"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Margin="4">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="FileChart" 
-                                                   Margin="0,0,16,0"/>
-                            <TextBlock Text="Reports"/>
-                        </StackPanel>
-                    </Button>
-                    
-                    <!-- Settings -->
-                    <Button Style="{StaticResource MaterialDesignFlatButton}"
-                            Click="NavigateToSettings"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Margin="4">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Settings" 
-                                                   Margin="0,0,16,0"/>
-                            <TextBlock Text="Settings"/>
-                        </StackPanel>
-                    </Button>
-                    
-                    <!-- Users (Admin only) -->
-                    <Button x:Name="UsersMenuButton"
-                            Style="{StaticResource MaterialDesignFlatButton}"
-                            Click="NavigateToUsers"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Margin="4"
-                            Visibility="Collapsed">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="AccountGroup" 
-                                                   Margin="0,0,16,0"/>
-                            <TextBlock Text="Users"/>
-                        </StackPanel>
-                    </Button>
-                    
-                    <Separator Margin="8"/>
-                    
-                    <!-- Backup -->
-                    <Button Style="{StaticResource MaterialDesignFlatButton}"
-                            Click="NavigateToBackup"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Margin="4">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="BackupRestore" 
-                                                   Margin="0,0,16,0"/>
-                            <TextBlock Text="Backup &amp; Restore"/>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
-            </ScrollViewer>
-            
-            <!-- Splitter -->
-            <GridSplitter Grid.Column="1" 
-                          HorizontalAlignment="Stretch" 
-                          Background="LightGray"/>
-            
-            <!-- Content Area -->
-            <ContentControl x:Name="MainContent" 
-                            Grid.Column="2"
-                            Margin="8"/>
+            <!-- ===== COMPACT ICON SIDEBAR ===== -->
+            <Border Grid.Column="0">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#1A237E" Offset="0"/>
+                        <GradientStop Color="#283593" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+                <ScrollViewer VerticalScrollBarVisibility="Hidden">
+                    <StackPanel x:Name="SidebarMenu" Margin="0,10,0,10">
+
+                        <!-- Dashboard -->
+                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                Click="NavigateToDashboard"
+                                Foreground="White"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Height="58" Padding="0" Margin="0,1"
+                                ToolTip="Dashboard">
+                            <StackPanel HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="ViewDashboard"
+                                                         Width="22" Height="22"
+                                                         HorizontalAlignment="Center"/>
+                                <TextBlock Text="Dashboard"
+                                           FontSize="8" HorizontalAlignment="Center"
+                                           Margin="0,3,0,0" Opacity="0.85"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Point of Sale -->
+                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                Click="NavigateToSales"
+                                Foreground="White"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Height="58" Padding="0" Margin="0,1"
+                                ToolTip="Point of Sale">
+                            <StackPanel HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="PointOfSale"
+                                                         Width="22" Height="22"
+                                                         HorizontalAlignment="Center"/>
+                                <TextBlock Text="Sales"
+                                           FontSize="8" HorizontalAlignment="Center"
+                                           Margin="0,3,0,0" Opacity="0.85"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Expenses -->
+                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                Click="NavigateToExpenses"
+                                Foreground="White"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Height="58" Padding="0" Margin="0,1"
+                                ToolTip="Expenses">
+                            <StackPanel HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="Receipt"
+                                                         Width="22" Height="22"
+                                                         HorizontalAlignment="Center"/>
+                                <TextBlock Text="Expenses"
+                                           FontSize="8" HorizontalAlignment="Center"
+                                           Margin="0,3,0,0" Opacity="0.85"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Debtors -->
+                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                Click="NavigateToDebtors"
+                                Foreground="White"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Height="58" Padding="0" Margin="0,1"
+                                ToolTip="Debtors">
+                            <StackPanel HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="AccountCash"
+                                                         Width="22" Height="22"
+                                                         HorizontalAlignment="Center"/>
+                                <TextBlock Text="Debtors"
+                                           FontSize="8" HorizontalAlignment="Center"
+                                           Margin="0,3,0,0" Opacity="0.85"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Divider -->
+                        <Rectangle Height="1" Fill="#30FFFFFF" Margin="10,8,10,8"/>
+
+                        <!-- Inventory -->
+                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                Click="NavigateToInventory"
+                                Foreground="White"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Height="58" Padding="0" Margin="0,1"
+                                ToolTip="Inventory">
+                            <StackPanel HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="PackageVariant"
+                                                         Width="22" Height="22"
+                                                         HorizontalAlignment="Center"/>
+                                <TextBlock Text="Inventory"
+                                           FontSize="8" HorizontalAlignment="Center"
+                                           Margin="0,3,0,0" Opacity="0.85"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Reports -->
+                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                Click="NavigateToReports"
+                                Foreground="White"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Height="58" Padding="0" Margin="0,1"
+                                ToolTip="Reports">
+                            <StackPanel HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="FileChart"
+                                                         Width="22" Height="22"
+                                                         HorizontalAlignment="Center"/>
+                                <TextBlock Text="Reports"
+                                           FontSize="8" HorizontalAlignment="Center"
+                                           Margin="0,3,0,0" Opacity="0.85"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Divider -->
+                        <Rectangle Height="1" Fill="#30FFFFFF" Margin="10,8,10,8"/>
+
+                        <!-- Settings -->
+                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                Click="NavigateToSettings"
+                                Foreground="White"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Height="58" Padding="0" Margin="0,1"
+                                ToolTip="Settings">
+                            <StackPanel HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="Settings"
+                                                         Width="22" Height="22"
+                                                         HorizontalAlignment="Center"/>
+                                <TextBlock Text="Settings"
+                                           FontSize="8" HorizontalAlignment="Center"
+                                           Margin="0,3,0,0" Opacity="0.85"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Backup -->
+                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                Click="NavigateToBackup"
+                                Foreground="White"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Height="58" Padding="0" Margin="0,1"
+                                ToolTip="Backup &amp; Restore">
+                            <StackPanel HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="BackupRestore"
+                                                         Width="22" Height="22"
+                                                         HorizontalAlignment="Center"/>
+                                <TextBlock Text="Backup"
+                                           FontSize="8" HorizontalAlignment="Center"
+                                           Margin="0,3,0,0" Opacity="0.85"/>
+                            </StackPanel>
+                        </Button>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- ===== MAIN CONTENT ===== -->
+            <ContentControl x:Name="MainContent" Grid.Column="1" Margin="0"/>
         </Grid>
+
+        <!-- Toast notifications -->
+        <materialDesign:Snackbar x:Name="MainSnackbar"
+                                  Grid.Row="1"
+                                  VerticalAlignment="Bottom"
+                                  HorizontalAlignment="Stretch"
+                                  MessageQueue="{materialDesign:MessageQueue}"/>
     </Grid>
 </Window>

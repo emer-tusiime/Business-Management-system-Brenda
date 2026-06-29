@@ -323,6 +323,41 @@ public class ReportService : IReportService
         }
     }
 
+    public Task<List<MonthlyTrendDto>> GetMonthlyTrendAsync(int monthsBack) =>
+        _dbGate.RunAsync(() => GetMonthlyTrendCoreAsync(monthsBack));
+
+    private async Task<List<MonthlyTrendDto>> GetMonthlyTrendCoreAsync(int monthsBack)
+    {
+        var today = DateTime.Today;
+        var rangeStart = new DateTime(today.Year, today.Month, 1).AddMonths(-(monthsBack - 1));
+        var rangeEnd = today;
+
+        // Two DB queries cover all months instead of 2*monthsBack separate queries
+        var sales = (await _saleRepository.GetByDateRangeAsync(rangeStart, rangeEnd)).ToList();
+        var expenses = (await _expenseRepository.GetByDateRangeAsync(rangeStart, rangeEnd)).ToList();
+
+        var trends = new List<MonthlyTrendDto>();
+        for (int i = monthsBack - 1; i >= 0; i--)
+        {
+            var month = today.AddMonths(-i);
+            var mStart = new DateTime(month.Year, month.Month, 1);
+            var mEnd = mStart.AddMonths(1);
+
+            trends.Add(new MonthlyTrendDto
+            {
+                Month = month.ToString("MMM"),
+                Income = sales
+                    .Where(s => s.SaleDate >= mStart && s.SaleDate < mEnd)
+                    .Sum(s => GetSaleTotal(s)),
+                Expenses = expenses
+                    .Where(e => e.ExpenseDate >= mStart && e.ExpenseDate < mEnd)
+                    .Sum(e => e.Amount)
+            });
+        }
+
+        return trends;
+    }
+
     internal static decimal GetSaleTotal(Sale sale)
     {
         if (sale.SaleItems != null && sale.SaleItems.Count > 0)

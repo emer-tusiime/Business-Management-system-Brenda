@@ -225,16 +225,23 @@ public partial class App : System.Windows.Application
     private void WireNotificationService(IServiceProvider services)
     {
         var notificationService = services.GetRequiredService<INotificationService>();
+        var mainWindow = services.GetRequiredService<MainWindow>();
+
         if (notificationService is NotificationService uiNotifications)
         {
+            // Confirmations stay as modal dialogs — they need a yes/no answer
             uiNotifications.ConfirmationRequested += message =>
                 MessageBox.Show(message, "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+
+            // All other notifications use the non-blocking Snackbar toast
             uiNotifications.SuccessMessage += message =>
-                MessageBox.Show(message, "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                mainWindow.SnackbarQueue.Enqueue(message);
             uiNotifications.ErrorMessage += message =>
-                MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                mainWindow.SnackbarQueue.Enqueue("Error: " + message);
             uiNotifications.WarningMessage += message =>
-                MessageBox.Show(message, "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                mainWindow.SnackbarQueue.Enqueue(message);
+            uiNotifications.InfoMessage += message =>
+                mainWindow.SnackbarQueue.Enqueue(message);
         }
     }
 

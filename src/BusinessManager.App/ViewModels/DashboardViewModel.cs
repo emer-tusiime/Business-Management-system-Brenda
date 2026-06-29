@@ -139,7 +139,7 @@ public partial class DashboardViewModel : ObservableObject
 
             try
             {
-                summary.MonthlyTrend = await GetMonthlyTrendAsync();
+                summary.MonthlyTrend = await _reportService.GetMonthlyTrendAsync(6);
             }
             catch (Exception ex)
             {
@@ -260,24 +260,5 @@ public partial class DashboardViewModel : ObservableObject
         };
     }
 
-    private async Task<List<MonthlyTrendDto>> GetMonthlyTrendAsync()
-    {
-        var trends = new List<MonthlyTrendDto>();
-        var today = DateTime.Today;
 
-        for (int i = 5; i >= 0; i--)
-        {
-            var month = today.AddMonths(-i);
-            var summary = await _reportService.GetMonthlySummaryAsync(month.Year, month.Month);
-
-            trends.Add(new MonthlyTrendDto
-            {
-                Month = month.ToString("MMM"),
-                Income = summary.TotalIncome,
-                Expenses = summary.TotalExpenses
-            });
-        }
-
-        return trends;
-    }
 }

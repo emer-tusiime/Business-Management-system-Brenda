@@ -9,8 +9,6 @@ using BusinessManager.App.Views.Inventory;
 using BusinessManager.App.Views.Reports;
 using BusinessManager.App.Views.Sales;
 using BusinessManager.App.Views.Settings;
-using BusinessManager.App.Views.Users;
-using BusinessManager.App.Views.Welcome;
 
 namespace BusinessManager.App;
 
@@ -21,7 +19,6 @@ public static class DependencyInjection
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<IDialogService, DialogService>();
 
-        services.AddTransient<WelcomeWindow>();
         services.AddTransient<LoginWindow>();
         services.AddTransient<LoginViewModel>();
 
@@ -38,8 +35,6 @@ public static class DependencyInjection
         services.AddTransient<ReportsViewModel>();
         services.AddTransient<SettingsView>();
         services.AddTransient<SettingsViewModel>();
-        services.AddTransient<UsersView>();
-        services.AddTransient<UsersViewModel>();
         services.AddTransient<BackupView>();
         services.AddTransient<BackupRestoreViewModel>();
 
