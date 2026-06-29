@@ -69,7 +69,12 @@ public partial class App : System.Windows.Application
             var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             
             await context.Database.EnsureCreatedAsync();
-            
+
+            // Enable WAL mode and tune sync for better read/write performance
+            await context.Database.ExecuteSqlRawAsync("PRAGMA journal_mode=WAL;");
+            await context.Database.ExecuteSqlRawAsync("PRAGMA synchronous=NORMAL;");
+            await context.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys=ON;");
+
             await EnsureDebtorsSchemaAsync(context);
             await SeedDataAsync(scope.ServiceProvider);
 

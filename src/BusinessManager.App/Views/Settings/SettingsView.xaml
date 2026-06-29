@@ -300,6 +300,69 @@
                         </DataGrid>
                     </Grid>
                 </materialDesign:Card>
+
+                <!-- Database Maintenance Card -->
+                <materialDesign:Card Margin="0,0,0,16">
+                    <Grid Margin="16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header -->
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+                            <materialDesign:PackIcon Kind="DatabaseCog" Width="22" Height="22"
+                                                     Foreground="#1565C0" VerticalAlignment="Center"
+                                                     Margin="0,0,10,0"/>
+                            <TextBlock Text="Database Maintenance"
+                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Info row -->
+                        <Border Grid.Row="1" Background="#F0F4FF" CornerRadius="8"
+                                Padding="14,10" Margin="0,0,0,14">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Journal mode: WAL  ·  Sync: NORMAL  ·  Foreign keys: ON"
+                                               FontSize="12" Foreground="#374151" Margin="0,0,0,4"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Database size: " FontSize="13" Foreground="#6B7280"/>
+                                        <TextBlock Text="{Binding DatabaseSizeText}"
+                                                   FontSize="13" FontWeight="SemiBold" Foreground="#1565C0"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <materialDesign:PackIcon Grid.Column="1" Kind="ShieldCheck"
+                                                         Width="32" Height="32"
+                                                         Foreground="#1565C0" Opacity="0.25"
+                                                         VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Compact button -->
+                        <StackPanel Grid.Row="2" Orientation="Horizontal">
+                            <Button Command="{Binding VacuumDatabaseCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    BorderBrush="#1565C0" Foreground="#1565C0"
+                                    Height="38" Padding="16,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="DatabaseSync" Width="18" Height="18"
+                                                             VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Compact Database (VACUUM)" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <TextBlock Text="Reclaims space freed by deleted records"
+                                       FontSize="12" Foreground="#9CA3AF"
+                                       VerticalAlignment="Center" Margin="14,0,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                </materialDesign:Card>
+
             </StackPanel>
         </ScrollViewer>
     </Grid>

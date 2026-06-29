@@ -5,6 +5,9 @@ using System.Collections.ObjectModel;
 using System; using System.Collections.Generic; using System.Threading.Tasks; using CommunityToolkit.Mvvm.ComponentModel; using CommunityToolkit.Mvvm.Input; using Microsoft.Extensions.Logging; using BusinessManager.Domain.Interfaces; using BusinessManager.Domain.Entities; using BusinessManager.Domain.DTOs; using BusinessManager.Domain.Enums; using BusinessManager.Application.Services;
 using BusinessManager.Domain.Entities;
 using BusinessManager.Domain.DTOs;
+using BusinessManager.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using System.IO;
 
 namespace BusinessManager.App.ViewModels;
 
@@ -15,6 +18,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IProductRepository _productRepository;
     private readonly INotificationService _notificationService;
     private readonly ILogger<SettingsViewModel> _logger;
+    private readonly AppDbContext _dbContext;
 
     [ObservableProperty]
     private ObservableCollection<Setting> _settings = new();
@@ -49,6 +53,12 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private bool _isEditing;
 
+    [ObservableProperty]
+    private string _databaseSizeText = "Calculating...";
+
+    [ObservableProperty]
+    private bool _isVacuuming;
+
     // Business Settings
     [ObservableProperty]
     private string _businessName = string.Empty;
@@ -73,13 +83,15 @@ public partial class SettingsViewModel : ObservableObject
         IServiceItemRepository serviceItemRepository,
         IProductRepository productRepository,
         INotificationService notificationService,
-        ILogger<SettingsViewModel> logger)
+        ILogger<SettingsViewModel> logger,
+        AppDbContext dbContext)
     {
         _settingService = settingService;
         _serviceItemRepository = serviceItemRepository;
         _productRepository = productRepository;
         _notificationService = notificationService;
         _logger = logger;
+        _dbContext = dbContext;
 
         LoadSettingsCommand = new RelayCommand(async () => await LoadSettingsAsync());
         LoadServiceItemsCommand = new RelayCommand(async () => await LoadServiceItemsAsync());
@@ -90,6 +102,7 @@ public partial class SettingsViewModel : ObservableObject
         UpdateServicePriceCommand = new RelayCommand(async () => await UpdateServicePriceAsync(), CanUpdateServicePrice);
         UpdateProductPriceCommand = new RelayCommand(async () => await UpdateProductPriceAsync(), CanUpdateProductPrice);
         RefreshCommand = new RelayCommand(async () => await RefreshAsync());
+        VacuumDatabaseCommand = new RelayCommand(async () => await VacuumDatabaseAsync(), () => !IsVacuuming);
     }
 
     public IRelayCommand LoadSettingsCommand { get; }
@@ -101,6 +114,7 @@ public partial class SettingsViewModel : ObservableObject
     public IRelayCommand UpdateServicePriceCommand { get; }
     public IRelayCommand UpdateProductPriceCommand { get; }
     public IRelayCommand RefreshCommand { get; }
+    public IRelayCommand VacuumDatabaseCommand { get; }
 
     public async Task InitializeAsync()
     {
@@ -108,6 +122,32 @@ public partial class SettingsViewModel : ObservableObject
         await LoadServiceItemsAsync();
         await LoadProductsAsync();
         await LoadBusinessSettingsAsync();
+        RefreshDatabaseSize();
+    }
+
+    private void RefreshDatabaseSize()
+    {
+        try
+        {
+            var dbPath = DatabasePathHelper.GetDatabasePath();
+            if (File.Exists(dbPath))
+            {
+                var bytes = new FileInfo(dbPath).Length;
+                DatabaseSizeText = bytes switch
+                {
+                    < 1024 * 1024 => $"{bytes / 1024.0:F1} KB",
+                    _ => $"{bytes / (1024.0 * 1024):F2} MB"
+                };
+            }
+            else
+            {
+                DatabaseSizeText = "Unknown";
+            }
+        }
+        catch
+        {
+            DatabaseSizeText = "Unknown";
+        }
     }
 
     private async Task LoadSettingsAsync()
@@ -306,5 +346,38 @@ public partial class SettingsViewModel : ObservableObject
         await LoadServiceItemsAsync();
         await LoadProductsAsync();
         await LoadBusinessSettingsAsync();
+        RefreshDatabaseSize();
+    }
+
+    private async Task VacuumDatabaseAsync()
+    {
+        try
+        {
+            IsVacuuming = true;
+            ((RelayCommand)VacuumDatabaseCommand).NotifyCanExecuteChanged();
+
+            var sizeBefore = new FileInfo(DatabasePathHelper.GetDatabasePath()).Length;
+
+            await _dbContext.Database.ExecuteSqlRawAsync("VACUUM;");
+
+            RefreshDatabaseSize();
+            var sizeAfter = new FileInfo(DatabasePathHelper.GetDatabasePath()).Length;
+            var savedMb = (sizeBefore - sizeAfter) / (1024.0 * 1024);
+
+            if (savedMb > 0.01)
+                _notificationService.ShowSuccess($"Database compacted — saved {savedMb:F2} MB. Current size: {DatabaseSizeText}");
+            else
+                _notificationService.ShowSuccess($"Database is already compact. Size: {DatabaseSizeText}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error running VACUUM");
+            _notificationService.ShowError("Database compaction failed");
+        }
+        finally
+        {
+            IsVacuuming = false;
+            ((RelayCommand)VacuumDatabaseCommand).NotifyCanExecuteChanged();
+        }
     }
 }
