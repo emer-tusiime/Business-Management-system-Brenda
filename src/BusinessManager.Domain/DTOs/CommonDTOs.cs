@@ -9,7 +9,9 @@ public class DailySummaryDto
     public DateTime Date { get; set; }
     public decimal CashReceived { get; set; }
     public decimal TotalIncome { get; set; }
+    public decimal TotalDebtPayments { get; set; }
     public decimal TotalExpenses { get; set; }
+    public decimal TotalSavings { get; set; }
     public decimal DrawerBalance { get; set; }
     public decimal TotalProfit { get; set; }
     public int TotalSales { get; set; }
@@ -23,6 +25,7 @@ public class MonthlySummaryDto
     public int Month { get; set; }
     public decimal TotalIncome { get; set; }
     public decimal TotalExpenses { get; set; }
+    public decimal TotalSavings { get; set; }
     public decimal TotalProfit { get; set; }
     public int TotalSales { get; set; }
     public int TotalExpensesCount { get; set; }
@@ -35,6 +38,7 @@ public class WeeklySummaryDto
     public DateTime WeekEnd { get; set; }
     public decimal TotalIncome { get; set; }
     public decimal TotalExpenses { get; set; }
+    public decimal TotalSavings { get; set; }
     public decimal TotalProfit { get; set; }
     public int TotalSales { get; set; }
     public int TotalExpensesCount { get; set; }

@@ -17,6 +17,7 @@ public class ReportService : IReportService
     private readonly IDebtorRepository _debtorRepository;
     private readonly IProductRepository _productRepository;
     private readonly IClientOrderRepository _orderRepository;
+    private readonly ISavingRepository _savingRepository;
     private readonly DbAccessGate _dbGate;
     private readonly ILogger<ReportService> _logger;
     // Lazy so QuestPDF font loading happens on a Task.Run thread, not the UI thread.
@@ -28,6 +29,7 @@ public class ReportService : IReportService
         IDebtorRepository debtorRepository,
         IProductRepository productRepository,
         IClientOrderRepository orderRepository,
+        ISavingRepository savingRepository,
         DbAccessGate dbGate,
         ILogger<ReportService> logger,
         Lazy<IPdfGenerator>? pdfGenerator = null)
@@ -37,6 +39,7 @@ public class ReportService : IReportService
         _debtorRepository = debtorRepository;
         _productRepository = productRepository;
         _orderRepository = orderRepository;
+        _savingRepository = savingRepository;
         _dbGate = dbGate;
         _logger = logger;
         _lazyPdfGenerator = pdfGenerator;
@@ -51,25 +54,35 @@ public class ReportService : IReportService
         {
             var (startDate, endDate) = BusinessDateHelper.GetLocalDayRange(date);
 
-            var sales = await _saleRepository.GetByDateRangeAsync(startDate, endDate);
-            var expenses = await _expenseRepository.GetByDateRangeAsync(startDate, endDate);
+            var sales         = await _saleRepository.GetByDateRangeAsync(startDate, endDate);
+            var expenses      = await _expenseRepository.GetByDateRangeAsync(startDate, endDate);
             var orderPayments = await _orderRepository.GetByPaymentDateRangeAsync(startDate, endDate);
+            var debtPayments  = await _debtorRepository.GetPaymentsTotalForDateRangeAsync(startDate, endDate);
+            var savedAmount   = await _savingRepository.GetTotalForDateRangeAsync(startDate, endDate);
 
-            var totalMadeToday = sales.Sum(s => GetSaleTotal(s)) + orderPayments.Sum(o => o.AmountPaid);
-            var totalExpenses = expenses.Sum(e => e.Amount);
-            var drawerBalance = totalMadeToday - totalExpenses;
+            var salesTotal         = sales.Sum(s => GetSaleTotal(s));
+            var orderPaymentsTotal = orderPayments.Sum(o => o.AmountPaid);
+            var totalIncome        = salesTotal + orderPaymentsTotal + debtPayments;
+            var totalExpenses      = expenses.Sum(e => e.Amount);
+
+            // DrawerBalance = all cash received today - business expenses paid - cash moved to savings
+            // TotalProfit   = Income - Expenses (savings is a cash transfer, not an operating cost)
+            var drawerBalance = totalIncome - totalExpenses - savedAmount;
+            var totalProfit   = totalIncome - totalExpenses;
 
             return new DailySummaryDto
             {
-                Date = date.Date,
-                CashReceived = totalMadeToday,
-                TotalIncome = totalMadeToday,
-                TotalExpenses = totalExpenses,
-                DrawerBalance = drawerBalance,
-                TotalProfit = drawerBalance,
-                TotalSales = sales.Count(),
+                Date             = date.Date,
+                CashReceived     = totalIncome,
+                TotalIncome      = totalIncome,
+                TotalDebtPayments = debtPayments,
+                TotalExpenses    = totalExpenses,
+                TotalSavings     = savedAmount,
+                DrawerBalance    = drawerBalance,
+                TotalProfit      = totalProfit,
+                TotalSales       = sales.Count(),
                 TotalExpensesCount = expenses.Count(),
-                AverageSaleAmount = sales.Any() ? totalMadeToday / sales.Count() : 0
+                AverageSaleAmount  = sales.Any() ? salesTotal / sales.Count() : 0
             };
         }
         catch (Exception ex)
@@ -88,23 +101,26 @@ public class ReportService : IReportService
         {
             var dayOfWeek = (int)date.DayOfWeek;
             var weekStart = date.Date.AddDays(-dayOfWeek);
-            var weekEnd = weekStart.AddDays(7).AddTicks(-1);
+            var weekEnd   = weekStart.AddDays(7).AddTicks(-1);
 
-            var sales = await _saleRepository.GetByDateRangeAsync(weekStart, weekEnd);
-            var expenses = await _expenseRepository.GetByDateRangeAsync(weekStart, weekEnd);
+            var sales         = await _saleRepository.GetByDateRangeAsync(weekStart, weekEnd);
+            var expenses      = await _expenseRepository.GetByDateRangeAsync(weekStart, weekEnd);
             var orderPayments = await _orderRepository.GetByPaymentDateRangeAsync(weekStart, weekEnd);
+            var debtPayments  = await _debtorRepository.GetPaymentsTotalForDateRangeAsync(weekStart, weekEnd);
+            var savedAmount   = await _savingRepository.GetTotalForDateRangeAsync(weekStart, weekEnd);
 
-            var totalIncome = sales.Sum(s => GetSaleTotal(s)) + orderPayments.Sum(o => o.AmountPaid);
+            var totalIncome   = sales.Sum(s => GetSaleTotal(s)) + orderPayments.Sum(o => o.AmountPaid) + debtPayments;
             var totalExpenses = expenses.Sum(e => e.Amount);
 
             return new WeeklySummaryDto
             {
-                WeekStart = weekStart,
-                WeekEnd = weekEnd,
-                TotalIncome = totalIncome,
-                TotalExpenses = totalExpenses,
-                TotalProfit = totalIncome - totalExpenses,
-                TotalSales = sales.Count(),
+                WeekStart          = weekStart,
+                WeekEnd            = weekEnd,
+                TotalIncome        = totalIncome,
+                TotalExpenses      = totalExpenses,
+                TotalSavings       = savedAmount,
+                TotalProfit        = totalIncome - totalExpenses,
+                TotalSales         = sales.Count(),
                 TotalExpensesCount = expenses.Count()
             };
         }
@@ -123,26 +139,29 @@ public class ReportService : IReportService
         try
         {
             var startDate = new DateTime(year, month, 1);
-            var endDate = startDate.AddMonths(1).AddTicks(-1);
+            var endDate   = startDate.AddMonths(1).AddTicks(-1);
 
-            var sales = await _saleRepository.GetByDateRangeAsync(startDate, endDate);
-            var expenses = await _expenseRepository.GetByDateRangeAsync(startDate, endDate);
+            var sales         = await _saleRepository.GetByDateRangeAsync(startDate, endDate);
+            var expenses      = await _expenseRepository.GetByDateRangeAsync(startDate, endDate);
             var orderPayments = await _orderRepository.GetByPaymentDateRangeAsync(startDate, endDate);
+            var debtPayments  = await _debtorRepository.GetPaymentsTotalForDateRangeAsync(startDate, endDate);
+            var savedAmount   = await _savingRepository.GetTotalForDateRangeAsync(startDate, endDate);
 
-            var totalIncome = sales.Sum(s => GetSaleTotal(s)) + orderPayments.Sum(o => o.AmountPaid);
+            var salesTotal    = sales.Sum(s => GetSaleTotal(s));
+            var totalIncome   = salesTotal + orderPayments.Sum(o => o.AmountPaid) + debtPayments;
             var totalExpenses = expenses.Sum(e => e.Amount);
-            var totalProfit = totalIncome - totalExpenses;
 
             return new MonthlySummaryDto
             {
-                Year = year,
-                Month = month,
-                TotalIncome = totalIncome,
-                TotalExpenses = totalExpenses,
-                TotalProfit = totalProfit,
-                TotalSales = sales.Count(),
+                Year               = year,
+                Month              = month,
+                TotalIncome        = totalIncome,
+                TotalExpenses      = totalExpenses,
+                TotalSavings       = savedAmount,
+                TotalProfit        = totalIncome - totalExpenses,
+                TotalSales         = sales.Count(),
                 TotalExpensesCount = expenses.Count(),
-                AverageSaleAmount = sales.Any() ? totalIncome / sales.Count() : 0
+                AverageSaleAmount  = sales.Any() ? salesTotal / sales.Count() : 0
             };
         }
         catch (Exception ex)
@@ -320,14 +339,19 @@ public class ReportService : IReportService
             var start = request.StartDate.Date;
             var end   = request.EndDate.Date.AddDays(1).AddTicks(-1);
 
-            var sales    = (await _saleRepository.GetByDateRangeAsync(start, end)).ToList();
-            var expenses = (await _expenseRepository.GetByDateRangeAsync(start, end)).ToList();
+            var sales         = (await _saleRepository.GetByDateRangeAsync(start, end)).ToList();
+            var expenses      = (await _expenseRepository.GetByDateRangeAsync(start, end)).ToList();
+            var orderPayments = (await _orderRepository.GetByPaymentDateRangeAsync(start, end)).ToList();
+            var debtPayments  = await _debtorRepository.GetPaymentsTotalForDateRangeAsync(start, end);
+            var savedAmount   = await _savingRepository.GetTotalForDateRangeAsync(start, end);
 
-            var totalIncome   = sales.Sum(s => GetSaleTotal(s));
-            var totalExpenses = expenses.Sum(e => e.Amount);
-            var netProfit     = totalIncome - totalExpenses;
+            var salesTotal         = sales.Sum(s => GetSaleTotal(s));
+            var orderPaymentsTotal = orderPayments.Sum(o => o.AmountPaid);
+            var totalIncome        = salesTotal + orderPaymentsTotal + debtPayments;
+            var totalExpenses      = expenses.Sum(e => e.Amount);
+            var netProfit          = totalIncome - totalExpenses;
 
-            // Income breakdown by service/product
+            // Income breakdown by service/product (from sales items)
             var incomeMap = new Dictionary<string, decimal>();
             foreach (var sale in sales)
             {
@@ -337,6 +361,11 @@ public class ReportService : IReportService
                     incomeMap[label] = incomeMap.GetValueOrDefault(label) + item.TotalPrice;
                 }
             }
+            if (orderPaymentsTotal > 0)
+                incomeMap["Client Order Payments"] = incomeMap.GetValueOrDefault("Client Order Payments") + orderPaymentsTotal;
+            if (debtPayments > 0)
+                incomeMap["Debt Collections"] = incomeMap.GetValueOrDefault("Debt Collections") + debtPayments;
+
             var incomeLines = incomeMap
                 .OrderByDescending(x => x.Value)
                 .Select(x => new IncomeLine(x.Key, x.Value,
@@ -415,30 +444,33 @@ public class ReportService : IReportService
 
     private async Task<List<MonthlyTrendDto>> GetMonthlyTrendCoreAsync(int monthsBack)
     {
-        var today = DateTime.Today;
+        var today      = DateTime.Today;
         var rangeStart = new DateTime(today.Year, today.Month, 1).AddMonths(-(monthsBack - 1));
-        var rangeEnd = today;
+        var rangeEnd   = today;
 
-        // Two DB queries cover all months instead of 2*monthsBack separate queries
-        var sales = (await _saleRepository.GetByDateRangeAsync(rangeStart, rangeEnd)).ToList();
-        var expenses = (await _expenseRepository.GetByDateRangeAsync(rangeStart, rangeEnd)).ToList();
+        // Fetch each source once for the full range, then group by month in memory
+        var sales         = (await _saleRepository.GetByDateRangeAsync(rangeStart, rangeEnd)).ToList();
+        var expenses      = (await _expenseRepository.GetByDateRangeAsync(rangeStart, rangeEnd)).ToList();
+        var orderPayments = (await _orderRepository.GetByPaymentDateRangeAsync(rangeStart, rangeEnd)).ToList();
+        var debtPayments  = (await _debtorRepository.GetPaymentsByDateRangeAsync(rangeStart, rangeEnd)).ToList();
 
         var trends = new List<MonthlyTrendDto>();
         for (int i = monthsBack - 1; i >= 0; i--)
         {
-            var month = today.AddMonths(-i);
+            var month  = today.AddMonths(-i);
             var mStart = new DateTime(month.Year, month.Month, 1);
-            var mEnd = mStart.AddMonths(1);
+            var mEnd   = mStart.AddMonths(1);
+
+            var monthIncome =
+                sales.Where(s => s.SaleDate >= mStart && s.SaleDate < mEnd).Sum(s => GetSaleTotal(s))
+                + orderPayments.Where(o => o.PaymentDate.HasValue && o.PaymentDate >= mStart && o.PaymentDate < mEnd).Sum(o => o.AmountPaid)
+                + debtPayments.Where(p => p.PaymentDate >= mStart && p.PaymentDate < mEnd).Sum(p => p.Amount);
 
             trends.Add(new MonthlyTrendDto
             {
-                Month = month.ToString("MMM"),
-                Income = sales
-                    .Where(s => s.SaleDate >= mStart && s.SaleDate < mEnd)
-                    .Sum(s => GetSaleTotal(s)),
-                Expenses = expenses
-                    .Where(e => e.ExpenseDate >= mStart && e.ExpenseDate < mEnd)
-                    .Sum(e => e.Amount)
+                Month    = month.ToString("MMM"),
+                Income   = monthIncome,
+                Expenses = expenses.Where(e => e.ExpenseDate >= mStart && e.ExpenseDate < mEnd).Sum(e => e.Amount)
             });
         }
 

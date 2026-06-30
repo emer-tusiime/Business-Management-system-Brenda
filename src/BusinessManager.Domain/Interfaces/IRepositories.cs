@@ -95,6 +95,7 @@ public interface IDebtorRepository : IRepository<Debtor>
     Task<IEnumerable<Debtor>> GetByCustomerNameAsync(string customerName);
     Task<decimal> GetTotalOutstandingAsync();
     Task<decimal> GetPaymentsTotalForDateRangeAsync(DateTime startDate, DateTime endDate);
+    Task<IEnumerable<DebtPayment>> GetPaymentsByDateRangeAsync(DateTime startDate, DateTime endDate);
     Task AddPaymentAsync(DebtPayment payment);
 }
 

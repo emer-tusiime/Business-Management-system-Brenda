@@ -517,6 +517,15 @@ public class DebtorRepository : Repository<Debtor>, IDebtorRepository
         return amounts.Sum();
     }
 
+    public async Task<IEnumerable<DebtPayment>> GetPaymentsByDateRangeAsync(DateTime startDate, DateTime endDate)
+    {
+        var rangeStart = startDate.Date;
+        var rangeEndExclusive = endDate.Date.AddDays(1);
+        return await _context.Set<DebtPayment>()
+            .Where(p => p.PaymentDate >= rangeStart && p.PaymentDate < rangeEndExclusive)
+            .ToListAsync();
+    }
+
     public async Task AddPaymentAsync(DebtPayment payment)
     {
         await _context.Set<DebtPayment>().AddAsync(payment);

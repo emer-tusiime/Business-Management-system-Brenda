@@ -81,8 +81,9 @@ public partial class DashboardViewModel : ObservableObject
             try
             {
                 var dailySummary = await _reportService.GetDailySummaryAsync(today);
-                summary.TodayIncome = dailySummary.TotalIncome;
+                summary.TodayIncome   = dailySummary.TotalIncome;
                 summary.TodayExpenses = dailySummary.TotalExpenses;
+                summary.TodaySavings  = dailySummary.TotalSavings;
                 summary.DrawerBalance = dailySummary.DrawerBalance;
             }
             catch (Exception ex)
