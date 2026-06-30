@@ -145,7 +145,7 @@
                                     </Style>
                                 </Button.Style>
                                 <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="FilePdf" Width="22" Height="22"
+                                    <materialDesign:PackIcon Kind="FilePdfBox" Width="22" Height="22"
                                                               VerticalAlignment="Center" Margin="0,0,10,0"/>
                                     <TextBlock Text="Generate &amp; Open PDF" FontSize="14" FontWeight="Bold"/>
                                 </StackPanel>
@@ -305,7 +305,7 @@
 
                                                     <Border Grid.Column="0" Width="42" Height="42" CornerRadius="8"
                                                             Background="#FEF2F2" Margin="0,0,12,0">
-                                                        <materialDesign:PackIcon Kind="FilePdf" Width="24" Height="24"
+                                                        <materialDesign:PackIcon Kind="FilePdfBox" Width="24" Height="24"
                                                                                   Foreground="#EF4444"
                                                                                   HorizontalAlignment="Center"
                                                                                   VerticalAlignment="Center"/>
