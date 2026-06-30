@@ -91,6 +91,7 @@ public interface IAuditLogRepository : IRepository<AuditLog>
 public interface IDebtorRepository : IRepository<Debtor>
 {
     Task<IEnumerable<Debtor>> GetActiveAsync();
+    Task<IEnumerable<Debtor>> GetAllWithDetailsAsync();
     Task<IEnumerable<Debtor>> GetByCustomerNameAsync(string customerName);
     Task<decimal> GetTotalOutstandingAsync();
     Task<decimal> GetPaymentsTotalForDateRangeAsync(DateTime startDate, DateTime endDate);

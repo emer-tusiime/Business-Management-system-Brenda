@@ -15,8 +15,9 @@ public partial class DashboardView : UserControl
     {
         if (DataContext is ViewModels.DashboardViewModel viewModel)
         {
-            // forceReload=false: reuses cached data if already loaded today
-            await viewModel.LoadDataAsync(forceReload: false);
+            // Always force-reload so sales/expenses recorded since the last
+            // dashboard visit are reflected immediately in the stats.
+            await viewModel.LoadDataAsync(forceReload: true);
         }
     }
 

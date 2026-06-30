@@ -476,6 +476,14 @@ public class DebtorRepository : Repository<Debtor>, IDebtorRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<Debtor>> GetAllWithDetailsAsync()
+    {
+        return await _dbSet
+            .Include(d => d.User)
+            .OrderByDescending(d => d.RecordDate)
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<Debtor>> GetByCustomerNameAsync(string customerName)
     {
         return await _dbSet

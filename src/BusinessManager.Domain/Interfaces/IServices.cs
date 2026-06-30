@@ -98,6 +98,7 @@ public interface IDebtorService
     Task<Debtor> CreateDebtorAsync(Debtor debtor);
     Task<Debtor?> GetDebtorByIdAsync(int id);
     Task<IEnumerable<Debtor>> GetActiveDebtorsAsync();
+    Task<IEnumerable<Debtor>> GetAllDebtorsAsync();
     Task<IEnumerable<CustomerDebtSummaryDto>> GetCustomerDebtSummariesAsync();
     Task<decimal> GetTotalOutstandingAsync();
     Task<Debtor> RecordPaymentAsync(int debtorId, decimal amount, string? notes, int userId);

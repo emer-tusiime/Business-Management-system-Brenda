@@ -111,6 +111,38 @@
                             <DataGridTextColumn Header="Total" Binding="{Binding TotalAmount, StringFormat='{}{0:N0}'}" Width="90"/>
                             <DataGridTextColumn Header="Paid" Binding="{Binding AmountPaid, StringFormat='{}{0:N0}'}" Width="90"/>
                             <DataGridTextColumn Header="Balance" Binding="{Binding Balance, StringFormat='{}{0:N0}'}" Width="90"/>
+                            <DataGridTemplateColumn Header="Status" Width="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="8" Padding="7,2" Margin="2" HorizontalAlignment="Left">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#FEF3C7"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSettled}" Value="True">
+                                                            <Setter Property="Background" Value="#D1FAE5"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock FontSize="11" FontWeight="SemiBold">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="OWING"/>
+                                                        <Setter Property="Foreground" Value="#92400E"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsSettled}" Value="True">
+                                                                <Setter Property="Text" Value="SETTLED"/>
+                                                                <Setter Property="Foreground" Value="#065F46"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTemplateColumn Header="Actions" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>

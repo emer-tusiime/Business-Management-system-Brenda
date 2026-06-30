@@ -48,6 +48,9 @@ public class DebtorService : IDebtorService
     public Task<IEnumerable<Debtor>> GetActiveDebtorsAsync() =>
         _dbGate.RunAsync(() => _debtorRepository.GetActiveAsync());
 
+    public Task<IEnumerable<Debtor>> GetAllDebtorsAsync() =>
+        _dbGate.RunAsync(() => _debtorRepository.GetAllWithDetailsAsync());
+
     public Task<IEnumerable<CustomerDebtSummaryDto>> GetCustomerDebtSummariesAsync() =>
         _dbGate.RunAsync(GetCustomerDebtSummariesCoreAsync);
 

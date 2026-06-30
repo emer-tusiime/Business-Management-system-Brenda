@@ -108,7 +108,8 @@ public partial class DebtorsViewModel : ObservableObject
         {
             IsLoading = true;
 
-            var debtors = await _debtorService.GetActiveDebtorsAsync();
+            // Show ALL records — settled debts stay visible so they can be revisited.
+            var debtors = await _debtorService.GetAllDebtorsAsync();
             var summaries = await _debtorService.GetCustomerDebtSummariesAsync();
             TotalOutstanding = await _debtorService.GetTotalOutstandingAsync();
 
