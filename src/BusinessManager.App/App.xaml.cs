@@ -48,6 +48,7 @@ public partial class App : System.Windows.Application
                 })
                 .Build();
 
+            WireGlobalExceptionHandlers();
             WireNotificationService(_host.Services);
 
             // Run DB init in background — no longer blocks the UI thread
@@ -283,6 +284,30 @@ public partial class App : System.Windows.Application
             uiNotifications.WarningMessage += message => mainWindow.SnackbarQueue.Enqueue(message);
             uiNotifications.InfoMessage    += message => mainWindow.SnackbarQueue.Enqueue(message);
         }
+    }
+
+    private void WireGlobalExceptionHandlers()
+    {
+        DispatcherUnhandledException += (_, e) =>
+        {
+            Log.Logger.Fatal(e.Exception, "Unhandled UI exception");
+            Log.CloseAndFlush();
+            e.Handled = true;
+            MessageBox.Show($"Unexpected error:\n{e.Exception.Message}\n\nDetails written to logs.",
+                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        };
+
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            Log.Logger.Fatal(e.ExceptionObject as Exception, "Fatal domain exception");
+            Log.CloseAndFlush();
+        };
+
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            Log.Logger.Error(e.Exception, "Unobserved task exception");
+            e.SetObserved();
+        };
     }
 
     protected override void OnExit(ExitEventArgs e)

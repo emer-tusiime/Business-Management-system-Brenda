@@ -46,6 +46,9 @@ public class Repository<T> : IRepository<T> where T : class
 
     public virtual async Task<T> UpdateAsync(T entity)
     {
+        // With a Singleton DbContext the entity may already be tracked from a previous
+        // query. Clear the tracker first to avoid the "already tracked" conflict.
+        _context.ChangeTracker.Clear();
         _dbSet.Update(entity);
         await _context.SaveChangesAsync();
         return entity;
