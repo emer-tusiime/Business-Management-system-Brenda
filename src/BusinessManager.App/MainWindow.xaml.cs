@@ -49,6 +49,21 @@ public partial class MainWindow : Window
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
         Hide();
+
+        // Wait for background DB initialisation to finish before showing login.
+        // On existing installs the fast-path completes in < 1 second.
+        try
+        {
+            await App.StartupDbTask;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Database initialisation failed:\n{ex.Message}",
+                "Startup Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            System.Windows.Application.Current.Shutdown();
+            return;
+        }
+
         await ShowLoginAsync();
     }
 

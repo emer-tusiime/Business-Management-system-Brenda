@@ -20,13 +20,15 @@ public partial class App : System.Windows.Application
 {
     private IHost? _host;
 
-    protected override async void OnStartup(StartupEventArgs e)
+    // MainWindow awaits this before showing login so DB is always ready
+    public static Task StartupDbTask { get; private set; } = Task.CompletedTask;
+
+    protected override void OnStartup(StartupEventArgs e)
     {
         QuestPDF.Settings.License = LicenseType.Community;
 
         try
         {
-            // Configure Serilog
             var configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .Build();
@@ -35,7 +37,6 @@ public partial class App : System.Windows.Application
                 .ReadFrom.Configuration(configuration)
                 .CreateLogger();
 
-            // Create host
             _host = Host.CreateDefaultBuilder()
                 .UseSerilog()
                 .ConfigureServices((context, services) =>
@@ -47,10 +48,15 @@ public partial class App : System.Windows.Application
                 })
                 .Build();
 
-            // Initialize database
-            await InitializeDatabaseAsync();
-
             WireNotificationService(_host.Services);
+
+            // Run DB init in background — no longer blocks the UI thread
+            StartupDbTask = InitializeDatabaseAsync();
+
+            // Pre-warm QuestPDF font loading on a thread-pool thread.
+            // QuestPdfGenerator is a Singleton — resolving it here initialises it
+            // so the first navigation to Reports doesn't freeze the UI thread.
+            _ = Task.Run(() => _ = _host.Services.GetRequiredService<IPdfGenerator>());
 
             var mainWindow = _host.Services.GetRequiredService<MainWindow>();
             mainWindow.Show();
@@ -59,7 +65,8 @@ public partial class App : System.Windows.Application
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Application startup failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"Application startup failed: {ex.Message}", "Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown();
         }
     }
@@ -70,10 +77,17 @@ public partial class App : System.Windows.Application
         {
             using var scope = _host!.Services.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            
-            await context.Database.EnsureCreatedAsync();
 
-            // Enable WAL mode and tune sync for better read/write performance
+            // Fast path: skip the expensive EnsureCreatedAsync on subsequent runs.
+            // If Users table already has data the schema is fully created.
+            bool isFirstRun;
+            try   { isFirstRun = !await context.Users.AnyAsync(); }
+            catch { isFirstRun = true; }   // DB doesn't exist or tables missing
+
+            if (isFirstRun)
+                await context.Database.EnsureCreatedAsync();
+
+            // SQLite performance tuning (fast regardless)
             await context.Database.ExecuteSqlRawAsync("PRAGMA journal_mode=WAL;");
             await context.Database.ExecuteSqlRawAsync("PRAGMA synchronous=NORMAL;");
             await context.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys=ON;");
@@ -139,15 +153,8 @@ public partial class App : System.Windows.Application
 
     private async Task EnsureNewTablesAsync(AppDbContext context)
     {
-        // Add Recipient column to Savings if it doesn't exist yet (idempotent)
-        try
-        {
-            await context.Database.ExecuteSqlRawAsync(
-                "ALTER TABLE Savings ADD COLUMN Recipient TEXT NOT NULL DEFAULT 'BANK';");
-        }
-        catch { /* Column already exists — safe to ignore */ }
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE Savings ADD COLUMN Recipient TEXT NOT NULL DEFAULT 'BANK';"); } catch { }
 
-        // Add payment columns to ClientOrders
         try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE ClientOrders ADD COLUMN OrderAmount REAL NOT NULL DEFAULT 0;"); } catch { }
         try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE ClientOrders ADD COLUMN AmountPaid REAL NOT NULL DEFAULT 0;"); } catch { }
         try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE ClientOrders ADD COLUMN PaymentStatus INTEGER NOT NULL DEFAULT 0;"); } catch { }
@@ -190,18 +197,14 @@ public partial class App : System.Windows.Application
             var context = serviceProvider.GetRequiredService<AppDbContext>();
             var logger = serviceProvider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<App>>();
 
-            // Check if data already exists
             if (await context.Users.AnyAsync())
             {
-                logger.LogInformation("Database already contains data, skipping seed");
+                logger.LogInformation("Database already seeded, skipping");
                 return;
             }
 
             logger.LogInformation("Seeding initial data...");
-            
-            // Seed data is already configured in the DbContext
             await context.SaveChangesAsync();
-            
             logger.LogInformation("Initial data seeded successfully");
         }
         catch (Exception ex)
@@ -233,9 +236,7 @@ public partial class App : System.Windows.Application
 
         var businessName = await context.Settings.FirstOrDefaultAsync(s => s.Key == "BusinessName");
         if (businessName != null && businessName.Value != "Alinda Brenda")
-        {
             businessName.Value = "Alinda Brenda";
-        }
 
         if (!await context.Settings.AnyAsync(s => s.Key == "DrawerOpeningBalance"))
         {
@@ -260,19 +261,14 @@ public partial class App : System.Windows.Application
             .Where(e => e.ExpenseDate < new DateTime(2000, 1, 1))
             .ToListAsync();
         foreach (var expense in expensesNeedingDate)
-        {
             expense.ExpenseDate = expense.CreatedAt;
-        }
 
         try
         {
             await context.Database.ExecuteSqlRawAsync(
                 "UPDATE Debtors SET IsSettled = 0 WHERE TotalAmount > AmountPaid");
         }
-        catch
-        {
-            // Debtors table may not exist yet on first run
-        }
+        catch { }
 
         await context.SaveChangesAsync();
     }
@@ -284,19 +280,13 @@ public partial class App : System.Windows.Application
 
         if (notificationService is NotificationService uiNotifications)
         {
-            // Confirmations stay as modal dialogs — they need a yes/no answer
             uiNotifications.ConfirmationRequested += message =>
                 MessageBox.Show(message, "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
 
-            // All other notifications use the non-blocking Snackbar toast
-            uiNotifications.SuccessMessage += message =>
-                mainWindow.SnackbarQueue.Enqueue(message);
-            uiNotifications.ErrorMessage += message =>
-                mainWindow.SnackbarQueue.Enqueue("Error: " + message);
-            uiNotifications.WarningMessage += message =>
-                mainWindow.SnackbarQueue.Enqueue(message);
-            uiNotifications.InfoMessage += message =>
-                mainWindow.SnackbarQueue.Enqueue(message);
+            uiNotifications.SuccessMessage += message => mainWindow.SnackbarQueue.Enqueue(message);
+            uiNotifications.ErrorMessage   += message => mainWindow.SnackbarQueue.Enqueue("Error: " + message);
+            uiNotifications.WarningMessage += message => mainWindow.SnackbarQueue.Enqueue(message);
+            uiNotifications.InfoMessage    += message => mainWindow.SnackbarQueue.Enqueue(message);
         }
     }
 

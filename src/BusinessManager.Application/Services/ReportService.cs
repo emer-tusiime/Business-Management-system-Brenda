@@ -272,10 +272,42 @@ public class ReportService : IReportService
 
     public async Task<ReportDto> GenerateReportAsync(GenerateReportRequest request)
     {
-        return await _dbGate.RunAsync(() => GenerateReportCoreAsync(request));
+        // Phase 1 — collect data inside the gate (fast DB queries only)
+        var data = await _dbGate.RunAsync(() => CollectReportDataAsync(request));
+
+        // Phase 2 — generate PDF on thread-pool (CPU-intensive, no DB access)
+        var pdfBytes = await Task.Run(() =>
+            _pdfGenerator != null
+                ? _pdfGenerator.GenerateFinancialReport(data)
+                : System.Text.Encoding.UTF8.GetBytes(
+                    $"PDF generator unavailable. Income: {data.TotalIncome}, Expenses: {data.TotalExpenses}"));
+
+        // Phase 3 — save file (fast I/O)
+        return await Task.Run(() => SaveReportFile(request, data, pdfBytes));
     }
 
-    private async Task<ReportDto> GenerateReportCoreAsync(GenerateReportRequest request)
+    private static ReportDto SaveReportFile(GenerateReportRequest request, FinancialReportData data, byte[] pdfBytes)
+    {
+        var reportsDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            "BrendaBusinessReports");
+        Directory.CreateDirectory(reportsDir);
+
+        var fileName = $"{data.ReportTitle.Replace(" ", "_")}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+        var filePath = Path.Combine(reportsDir, fileName);
+        File.WriteAllBytes(filePath, pdfBytes);
+
+        return new ReportDto
+        {
+            Name        = data.ReportTitle,
+            ReportType  = request.ReportType,
+            FilePath    = filePath,
+            GeneratedAt = DateTime.Now,
+            FileSize    = pdfBytes.Length
+        };
+    }
+
+    private async Task<FinancialReportData> CollectReportDataAsync(GenerateReportRequest request)
     {
         try
         {
@@ -334,7 +366,7 @@ public class ReportService : IReportService
                 _          => "Financial Summary Report"
             };
 
-            var data = new FinancialReportData(
+            return new FinancialReportData(
                 ReportTitle:            title,
                 ReportType:             request.ReportType,
                 StartDate:              start,
@@ -349,41 +381,10 @@ public class ReportService : IReportService
                 SaleDetails:            saleLines,
                 ExpenseDetails:         expenseLines
             );
-
-            byte[] pdfBytes;
-            if (_pdfGenerator != null)
-            {
-                pdfBytes = _pdfGenerator.GenerateFinancialReport(data);
-            }
-            else
-            {
-                pdfBytes = System.Text.Encoding.UTF8.GetBytes(
-                    $"PDF generation not available. Income: {totalIncome}, Expenses: {totalExpenses}");
-            }
-
-            var reportsDir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                "BrendaBusinessReports");
-            Directory.CreateDirectory(reportsDir);
-
-            var fileName = $"{request.ReportType.Replace(" ", "_")}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
-            var filePath = Path.Combine(reportsDir, fileName);
-            await File.WriteAllBytesAsync(filePath, pdfBytes);
-
-            return new ReportDto
-            {
-                Id          = new Random().Next(1000, 9999),
-                Name        = $"{title} — {period}",
-                ReportType  = request.ReportType,
-                GeneratedAt = DateTime.Now,
-                FilePath    = filePath,
-                FileSize    = pdfBytes.Length,
-                GeneratedBy = "System"
-            };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating {ReportType} report", request.ReportType);
+            _logger.LogError(ex, "Error collecting report data for {ReportType}", request.ReportType);
             throw;
         }
     }
