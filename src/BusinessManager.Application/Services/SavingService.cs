@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using BusinessManager.Domain.Entities;
@@ -25,6 +26,18 @@ public class SavingService : ISavingService
 
     public Task<IEnumerable<Saving>> GetSavingsByDateRangeAsync(DateTime startDate, DateTime endDate) =>
         _dbGate.RunAsync(() => _repo.GetByDateRangeAsync(startDate, endDate));
+
+    public async Task<IEnumerable<Saving>> GetSavingsByRecipientAsync(string recipient, DateTime startDate, DateTime endDate)
+    {
+        var all = await _dbGate.RunAsync(() => _repo.GetByDateRangeAsync(startDate, endDate));
+        return all.Where(s => string.Equals(s.Recipient, recipient, StringComparison.OrdinalIgnoreCase));
+    }
+
+    public async Task<decimal> GetRecipientTotalAsync(string recipient, DateTime startDate, DateTime endDate)
+    {
+        var items = await GetSavingsByRecipientAsync(recipient, startDate, endDate);
+        return items.Sum(s => s.Amount);
+    }
 
     public Task<decimal> GetTodaySavingsAsync() =>
         _dbGate.RunAsync(() => _repo.GetTotalForDateAsync(DateTime.Today));

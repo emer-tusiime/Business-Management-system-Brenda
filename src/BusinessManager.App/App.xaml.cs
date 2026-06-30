@@ -139,6 +139,14 @@ public partial class App : System.Windows.Application
 
     private async Task EnsureNewTablesAsync(AppDbContext context)
     {
+        // Add Recipient column to Savings if it doesn't exist yet (idempotent)
+        try
+        {
+            await context.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE Savings ADD COLUMN Recipient TEXT NOT NULL DEFAULT 'BANK';");
+        }
+        catch { /* Column already exists — safe to ignore */ }
+
         await context.Database.ExecuteSqlRawAsync("""
             CREATE TABLE IF NOT EXISTS "Savings" (
                 "Id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,

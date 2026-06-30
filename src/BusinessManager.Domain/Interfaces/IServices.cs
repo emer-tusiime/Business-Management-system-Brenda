@@ -119,7 +119,9 @@ public interface ISavingService
 {
     Task<Saving> CreateSavingAsync(Saving saving);
     Task<IEnumerable<Saving>> GetSavingsByDateRangeAsync(DateTime startDate, DateTime endDate);
+    Task<IEnumerable<Saving>> GetSavingsByRecipientAsync(string recipient, DateTime startDate, DateTime endDate);
     Task<decimal> GetTodaySavingsAsync();
+    Task<decimal> GetRecipientTotalAsync(string recipient, DateTime startDate, DateTime endDate);
     Task<decimal> GetTotalSavingsAsync(DateTime startDate, DateTime endDate);
     Task<bool> DeleteSavingAsync(int id);
 }

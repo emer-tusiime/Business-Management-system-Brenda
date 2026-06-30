@@ -80,6 +80,7 @@ public class SavingDto
     public int Id { get; set; }
     public DateTime Date { get; set; }
     public decimal Amount { get; set; }
+    public string Recipient { get; set; } = string.Empty;
     public string? Notes { get; set; }
     public string UserName { get; set; } = string.Empty;
 }

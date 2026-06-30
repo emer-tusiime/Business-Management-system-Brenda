@@ -121,12 +121,6 @@
                                                     ToolTip="Record Payment">
                                                 <materialDesign:PackIcon Kind="CashPlus"/>
                                             </Button>
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                    Command="{Binding DataContext.DeleteDebtCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                    CommandParameter="{Binding}"
-                                                    ToolTip="Delete">
-                                                <materialDesign:PackIcon Kind="Delete"/>
-                                            </Button>
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>

@@ -18,13 +18,20 @@ public partial class SavingsViewModel : ObservableObject
     private readonly ILogger<SavingsViewModel> _logger;
     private readonly User _currentUser;
 
+    public static readonly string[] Recipients = { "OVALLA VALLENTINE", "BULE", "BANK" };
+
     [ObservableProperty] private ObservableCollection<SavingDto> _savings = new();
     [ObservableProperty] private decimal _newAmount;
+    [ObservableProperty] private string _selectedRecipient = "BANK";
     [ObservableProperty] private string _newNotes = string.Empty;
-    [ObservableProperty] private DateTime _filterStartDate = DateTime.Today.AddDays(-30);
+    [ObservableProperty] private DateTime _filterStartDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
     [ObservableProperty] private DateTime _filterEndDate = DateTime.Today;
+    [ObservableProperty] private string _filterRecipient = "ALL";
     [ObservableProperty] private decimal _totalSavings;
     [ObservableProperty] private decimal _todaySavings;
+    [ObservableProperty] private decimal _ovallaTotal;
+    [ObservableProperty] private decimal _buleTotal;
+    [ObservableProperty] private decimal _bankTotal;
     [ObservableProperty] private bool _isLoading;
 
     public SavingsViewModel(ISavingService savingService, INotificationService notificationService,
@@ -36,19 +43,26 @@ public partial class SavingsViewModel : ObservableObject
         _currentUser = currentUser;
 
         SaveCommand = new RelayCommand(async () => await SaveAsync(), CanSave);
-        DeleteCommand = new RelayCommand<SavingDto>(async dto => await DeleteAsync(dto));
         LoadCommand = new RelayCommand(async () => await LoadAsync());
         FilterCommand = new RelayCommand(async () => await LoadAsync());
+        FilterByRecipientCommand = new RelayCommand<string>(async r =>
+        {
+            FilterRecipient = r ?? "ALL";
+            await LoadAsync();
+        });
     }
 
     public IRelayCommand SaveCommand { get; }
-    public IRelayCommand<SavingDto> DeleteCommand { get; }
     public IRelayCommand LoadCommand { get; }
     public IRelayCommand FilterCommand { get; }
+    public IRelayCommand<string> FilterByRecipientCommand { get; }
 
     public async Task InitializeAsync() => await LoadAsync();
 
     private bool CanSave() => NewAmount > 0;
+
+    partial void OnNewAmountChanged(decimal value) =>
+        ((RelayCommand)SaveCommand).NotifyCanExecuteChanged();
 
     private async Task SaveAsync()
     {
@@ -58,16 +72,17 @@ public partial class SavingsViewModel : ObservableObject
 
             var saving = new Saving
             {
-                Date = DateTime.Today,
-                Amount = NewAmount,
-                Notes = string.IsNullOrWhiteSpace(NewNotes) ? null : NewNotes,
-                UserId = _currentUser.Id
+                Date      = DateTime.Today,
+                Amount    = NewAmount,
+                Recipient = SelectedRecipient,
+                Notes     = string.IsNullOrWhiteSpace(NewNotes) ? null : NewNotes,
+                UserId    = _currentUser.Id
             };
 
             await _savingService.CreateSavingAsync(saving);
-            _notificationService.ShowSuccess($"UGX {NewAmount:N0} saved successfully");
+            _notificationService.ShowSuccess($"UGX {NewAmount:N0} saved to {SelectedRecipient}");
             NewAmount = 0;
-            NewNotes = string.Empty;
+            NewNotes  = string.Empty;
             await LoadAsync();
         }
         catch (Exception ex)
@@ -77,40 +92,37 @@ public partial class SavingsViewModel : ObservableObject
         }
     }
 
-    private async Task DeleteAsync(SavingDto? dto)
-    {
-        if (dto == null) return;
-        if (!_notificationService.ShowConfirmation($"Delete saving of UGX {dto.Amount:N0}?")) return;
-
-        try
-        {
-            await _savingService.DeleteSavingAsync(dto.Id);
-            _notificationService.ShowSuccess("Saving deleted");
-            await LoadAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error deleting saving");
-            _notificationService.ShowError("Error deleting saving");
-        }
-    }
-
     private async Task LoadAsync()
     {
         try
         {
             IsLoading = true;
-            var items = await _savingService.GetSavingsByDateRangeAsync(FilterStartDate, FilterEndDate);
-            Savings = new ObservableCollection<SavingDto>(items.Select(s => new SavingDto
-            {
-                Id = s.Id,
-                Date = s.Date,
-                Amount = s.Amount,
-                Notes = s.Notes,
-                UserName = s.User?.FullName ?? ""
-            }));
-            TotalSavings = Savings.Sum(s => s.Amount);
+
+            var start = FilterStartDate.Date;
+            var end   = FilterEndDate.Date.AddDays(1).AddTicks(-1);
+
+            var all = (await _savingService.GetSavingsByDateRangeAsync(start, end)).ToList();
+
+            OvallaTotal  = all.Where(s => s.Recipient == "OVALLA VALLENTINE").Sum(s => s.Amount);
+            BuleTotal    = all.Where(s => s.Recipient == "BULE").Sum(s => s.Amount);
+            BankTotal    = all.Where(s => s.Recipient == "BANK").Sum(s => s.Amount);
+            TotalSavings = all.Sum(s => s.Amount);
             TodaySavings = await _savingService.GetTodaySavingsAsync();
+
+            var filtered = FilterRecipient == "ALL"
+                ? all
+                : all.Where(s => s.Recipient == FilterRecipient).ToList();
+
+            Savings = new ObservableCollection<SavingDto>(
+                filtered.OrderByDescending(s => s.Date).Select(s => new SavingDto
+                {
+                    Id        = s.Id,
+                    Date      = s.Date,
+                    Amount    = s.Amount,
+                    Recipient = s.Recipient,
+                    Notes     = s.Notes,
+                    UserName  = s.User?.FullName ?? ""
+                }));
         }
         catch (Exception ex)
         {

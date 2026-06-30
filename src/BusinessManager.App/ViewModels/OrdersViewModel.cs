@@ -62,6 +62,12 @@ public partial class OrdersViewModel : ObservableObject
     private bool CanSave() =>
         !string.IsNullOrWhiteSpace(NewClientName) && !string.IsNullOrWhiteSpace(NewDescription);
 
+    partial void OnNewClientNameChanged(string value) =>
+        ((RelayCommand)SaveOrderCommand).NotifyCanExecuteChanged();
+
+    partial void OnNewDescriptionChanged(string value) =>
+        ((RelayCommand)SaveOrderCommand).NotifyCanExecuteChanged();
+
     private async Task SaveOrderAsync()
     {
         try

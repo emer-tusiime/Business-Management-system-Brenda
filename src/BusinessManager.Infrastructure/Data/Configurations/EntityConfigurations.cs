@@ -489,6 +489,7 @@ public class SavingConfiguration : IEntityTypeConfiguration<Saving>
         builder.ToTable("Savings");
         builder.HasKey(s => s.Id);
         builder.Property(s => s.Amount).HasPrecision(18, 2);
+        builder.Property(s => s.Recipient).IsRequired().HasMaxLength(100).HasDefaultValue("BANK");
         builder.Property(s => s.Notes).HasMaxLength(500);
         builder.Property(s => s.Date).IsRequired();
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using BusinessManager.App.Services;
 using BusinessManager.App.ViewModels;
@@ -19,6 +20,9 @@ public partial class MainWindow : Window
     private readonly NotificationCenter _notificationCenter;
     private User? _currentUser;
 
+    private readonly DispatcherTimer _inactivityTimer;
+    private const int InactivityMinutes = 5;
+
     public MainWindow(IServiceProvider serviceProvider, INavigationService navigationService,
         NotificationCenter notificationCenter)
     {
@@ -29,10 +33,35 @@ public partial class MainWindow : Window
 
         _notificationCenter.CountChanged += UpdateNotificationBadge;
         Loaded += MainWindow_Loaded;
+
+        _inactivityTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(InactivityMinutes) };
+        _inactivityTimer.Tick += OnInactivityTimeout;
+
+        // Reset timer on any user interaction
+        EventManager.RegisterClassHandler(typeof(Window),
+            System.Windows.Input.Mouse.MouseMoveEvent,
+            new System.Windows.Input.MouseEventHandler((_, _) => ResetInactivityTimer()), true);
+        EventManager.RegisterClassHandler(typeof(Window),
+            System.Windows.Input.Keyboard.KeyDownEvent,
+            new System.Windows.Input.KeyEventHandler((_, _) => ResetInactivityTimer()), true);
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
+        Hide();
+        await ShowLoginAsync();
+    }
+
+    private void ResetInactivityTimer()
+    {
+        _inactivityTimer.Stop();
+        _inactivityTimer.Start();
+    }
+
+    private async void OnInactivityTimeout(object? sender, EventArgs e)
+    {
+        _inactivityTimer.Stop();
+        _currentUser = null;
         Hide();
         await ShowLoginAsync();
     }
@@ -64,6 +93,7 @@ public partial class MainWindow : Window
 
     private async Task ShowLoginAsync()
     {
+        _inactivityTimer.Stop();
         var loginWindow = _serviceProvider.GetRequiredService<Views.Auth.LoginWindow>();
         if (loginWindow.ShowDialog() != true)
         {
@@ -74,7 +104,8 @@ public partial class MainWindow : Window
         _currentUser = loginWindow.CurrentUser;
         UpdateUIForCurrentUser();
         NavigateToDashboard(null, null);
-        Show(); // reveal main window only after successful login
+        Show();
+        ResetInactivityTimer();
     }
 
     public MaterialDesignThemes.Wpf.SnackbarMessageQueue SnackbarQueue =>
