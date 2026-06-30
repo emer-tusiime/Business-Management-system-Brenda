@@ -19,7 +19,8 @@ public class ReportService : IReportService
     private readonly IClientOrderRepository _orderRepository;
     private readonly DbAccessGate _dbGate;
     private readonly ILogger<ReportService> _logger;
-    private readonly IPdfGenerator? _pdfGenerator;
+    // Lazy so QuestPDF font loading happens on a Task.Run thread, not the UI thread.
+    private readonly Lazy<IPdfGenerator>? _lazyPdfGenerator;
 
     public ReportService(
         ISaleRepository saleRepository,
@@ -29,7 +30,7 @@ public class ReportService : IReportService
         IClientOrderRepository orderRepository,
         DbAccessGate dbGate,
         ILogger<ReportService> logger,
-        IPdfGenerator? pdfGenerator = null)
+        Lazy<IPdfGenerator>? pdfGenerator = null)
     {
         _saleRepository = saleRepository;
         _expenseRepository = expenseRepository;
@@ -38,7 +39,7 @@ public class ReportService : IReportService
         _orderRepository = orderRepository;
         _dbGate = dbGate;
         _logger = logger;
-        _pdfGenerator = pdfGenerator;
+        _lazyPdfGenerator = pdfGenerator;
     }
 
     public Task<DailySummaryDto> GetDailySummaryAsync(DateTime date) =>
@@ -275,12 +276,17 @@ public class ReportService : IReportService
         // Phase 1 — collect data inside the gate (fast DB queries only)
         var data = await _dbGate.RunAsync(() => CollectReportDataAsync(request));
 
-        // Phase 2 — generate PDF on thread-pool (CPU-intensive, no DB access)
+        // Phase 2 — generate PDF on thread-pool (CPU-intensive, no DB access).
+        // Accessing _lazyPdfGenerator.Value here (inside Task.Run) means QuestPDF font
+        // loading runs on a background thread instead of blocking the UI thread.
         var pdfBytes = await Task.Run(() =>
-            _pdfGenerator != null
-                ? _pdfGenerator.GenerateFinancialReport(data)
+        {
+            var gen = _lazyPdfGenerator?.Value;
+            return gen != null
+                ? gen.GenerateFinancialReport(data)
                 : System.Text.Encoding.UTF8.GetBytes(
-                    $"PDF generator unavailable. Income: {data.TotalIncome}, Expenses: {data.TotalExpenses}"));
+                    $"PDF generator unavailable. Income: {data.TotalIncome}, Expenses: {data.TotalExpenses}");
+        });
 
         // Phase 3 — save file (fast I/O)
         return await Task.Run(() => SaveReportFile(request, data, pdfBytes));

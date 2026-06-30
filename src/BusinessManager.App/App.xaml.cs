@@ -53,11 +53,6 @@ public partial class App : System.Windows.Application
             // Run DB init in background — no longer blocks the UI thread
             StartupDbTask = InitializeDatabaseAsync();
 
-            // Pre-warm QuestPDF font loading on a thread-pool thread.
-            // QuestPdfGenerator is a Singleton — resolving it here initialises it
-            // so the first navigation to Reports doesn't freeze the UI thread.
-            _ = Task.Run(() => _ = _host.Services.GetRequiredService<IPdfGenerator>());
-
             var mainWindow = _host.Services.GetRequiredService<MainWindow>();
             mainWindow.Show();
 

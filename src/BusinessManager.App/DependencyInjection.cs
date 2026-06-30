@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using BusinessManager.App.Services;
 using BusinessManager.App.ViewModels;
 using BusinessManager.Application.Services;
+using BusinessManager.Domain.Interfaces;
 using BusinessManager.Reporting;
 using BusinessManager.App.Views.Auth;
 using BusinessManager.App.Views.Backup;
@@ -21,6 +22,9 @@ public static class DependencyInjection
     public static IServiceCollection AddPresentation(this IServiceCollection services)
     {
         services.AddSingleton<IPdfGenerator, QuestPdfGenerator>();
+        // Lazy wrapper so QuestPDF is only constructed when first needed (inside Task.Run),
+        // not when ReportService (Singleton) is created on the UI thread after login.
+        services.AddSingleton(sp => new Lazy<IPdfGenerator>(() => sp.GetRequiredService<IPdfGenerator>()));
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<NotificationCenter>();
