@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using QuestPDF.Infrastructure;
 using BusinessManager.Infrastructure;
 using BusinessManager.Application.Services;
 using BusinessManager.Domain.Interfaces;
@@ -21,6 +22,8 @@ public partial class App : System.Windows.Application
 
     protected override async void OnStartup(StartupEventArgs e)
     {
+        QuestPDF.Settings.License = LicenseType.Community;
+
         try
         {
             // Configure Serilog

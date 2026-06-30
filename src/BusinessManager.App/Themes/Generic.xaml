@@ -14,6 +14,11 @@
     <converters:BoolToSaveButtonTextConverter x:Key="BoolToSaveButtonTextConverter"/>
     <converters:StockStatusToColorConverter x:Key="StockStatusToColorConverter"/>
     <converters:StockStatusToTextConverter x:Key="StockStatusToTextConverter"/>
+    <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+    <converters:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
+    <converters:NullOrEmptyToVisibilityConverter x:Key="NullOrEmptyToVisibilityConverter"/>
+    <converters:StringEqualityConverter x:Key="StringEqualityConverter"/>
+    <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
     
     <!-- Card Styles -->
     <Style x:Key="SummaryCardStyle" TargetType="materialDesign:Card">

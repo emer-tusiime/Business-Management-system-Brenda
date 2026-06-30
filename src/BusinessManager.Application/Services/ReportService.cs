@@ -18,6 +18,7 @@ public class ReportService : IReportService
     private readonly IProductRepository _productRepository;
     private readonly DbAccessGate _dbGate;
     private readonly ILogger<ReportService> _logger;
+    private readonly IPdfGenerator? _pdfGenerator;
 
     public ReportService(
         ISaleRepository saleRepository,
@@ -25,7 +26,8 @@ public class ReportService : IReportService
         IDebtorRepository debtorRepository,
         IProductRepository productRepository,
         DbAccessGate dbGate,
-        ILogger<ReportService> logger)
+        ILogger<ReportService> logger,
+        IPdfGenerator? pdfGenerator = null)
     {
         _saleRepository = saleRepository;
         _expenseRepository = expenseRepository;
@@ -33,6 +35,7 @@ public class ReportService : IReportService
         _productRepository = productRepository;
         _dbGate = dbGate;
         _logger = logger;
+        _pdfGenerator = pdfGenerator;
     }
 
     public Task<DailySummaryDto> GetDailySummaryAsync(DateTime date) =>
@@ -263,43 +266,114 @@ public class ReportService : IReportService
 
     public async Task<ReportDto> GenerateReportAsync(GenerateReportRequest request)
     {
+        return await _dbGate.RunAsync(() => GenerateReportCoreAsync(request));
+    }
+
+    private async Task<ReportDto> GenerateReportCoreAsync(GenerateReportRequest request)
+    {
         try
         {
-            _logger.LogInformation("Generating {ReportType} report from {StartDate} to {EndDate}", 
-                request.ReportType, request.StartDate, request.EndDate);
+            var start = request.StartDate.Date;
+            var end   = request.EndDate.Date.AddDays(1).AddTicks(-1);
 
-            // Simplified implementation
-            var reportData = new Dictionary<string, object>
+            var sales    = (await _saleRepository.GetByDateRangeAsync(start, end)).ToList();
+            var expenses = (await _expenseRepository.GetByDateRangeAsync(start, end)).ToList();
+
+            var totalIncome   = sales.Sum(s => GetSaleTotal(s));
+            var totalExpenses = expenses.Sum(e => e.Amount);
+            var netProfit     = totalIncome - totalExpenses;
+
+            // Income breakdown by service/product
+            var incomeMap = new Dictionary<string, decimal>();
+            foreach (var sale in sales)
             {
-                { "report_type", request.ReportType },
-                { "start_date", request.StartDate },
-                { "end_date", request.EndDate },
-                { "generated_at", DateTime.UtcNow }
+                foreach (var item in sale.SaleItems)
+                {
+                    var label = item.ServiceItem?.Name ?? item.Product?.Name ?? "General";
+                    incomeMap[label] = incomeMap.GetValueOrDefault(label) + item.TotalPrice;
+                }
+            }
+            var incomeLines = incomeMap
+                .OrderByDescending(x => x.Value)
+                .Select(x => new IncomeLine(x.Key, x.Value,
+                    totalIncome > 0 ? (double)(x.Value / totalIncome * 100) : 0))
+                .ToList();
+
+            var saleLines = sales
+                .OrderByDescending(s => s.SaleDate)
+                .Select(s => new SaleLine(
+                    s.SaleDate,
+                    string.Join(", ", s.SaleItems.Select(i => i.ServiceItem?.Name ?? i.Product?.Name ?? "Item")),
+                    GetSaleTotal(s)))
+                .ToList();
+
+            var expenseLines = expenses
+                .OrderByDescending(e => e.ExpenseDate)
+                .Select(e => new ExpenseLine(
+                    e.ExpenseDate,
+                    e.ExpenseCategory?.Name ?? "Uncategorised",
+                    e.Description ?? "",
+                    e.Amount))
+                .ToList();
+
+            var isSingleDay = start.Date == end.Date;
+            var period = isSingleDay
+                ? start.ToString("dd MMMM yyyy")
+                : $"{start:dd MMM yyyy} – {request.EndDate.Date:dd MMM yyyy}";
+
+            var title = request.ReportType switch
+            {
+                "Sales"    => "Sales Report",
+                "Expenses" => "Expenses Report",
+                _          => "Financial Summary Report"
             };
 
-            var json = System.Text.Json.JsonSerializer.Serialize(reportData);
-            var bytes = System.Text.Encoding.UTF8.GetBytes(json);
+            var data = new FinancialReportData(
+                ReportTitle:            title,
+                ReportType:             request.ReportType,
+                StartDate:              start,
+                EndDate:                request.EndDate.Date,
+                Period:                 period,
+                TotalIncome:            totalIncome,
+                TotalExpenses:          totalExpenses,
+                NetProfit:              netProfit,
+                TotalSaleTransactions:  sales.Count,
+                TotalExpenseTransactions: expenses.Count,
+                IncomeSummary:          incomeLines,
+                SaleDetails:            saleLines,
+                ExpenseDetails:         expenseLines
+            );
 
-            // Save to file (simplified)
-            var fileName = $"{request.ReportType}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
-            var filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Reports", fileName);
-            
-            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-            await File.WriteAllBytesAsync(filePath, bytes);
-
-            var report = new ReportDto
+            byte[] pdfBytes;
+            if (_pdfGenerator != null)
             {
-                Id = 1,
-                Name = $"{request.ReportType} Report",
-                ReportType = request.ReportType,
-                GeneratedAt = DateTime.UtcNow,
-                FilePath = filePath,
-                FileSize = bytes.Length,
+                pdfBytes = _pdfGenerator.GenerateFinancialReport(data);
+            }
+            else
+            {
+                pdfBytes = System.Text.Encoding.UTF8.GetBytes(
+                    $"PDF generation not available. Income: {totalIncome}, Expenses: {totalExpenses}");
+            }
+
+            var reportsDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                "BrendaBusinessReports");
+            Directory.CreateDirectory(reportsDir);
+
+            var fileName = $"{request.ReportType.Replace(" ", "_")}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+            var filePath = Path.Combine(reportsDir, fileName);
+            await File.WriteAllBytesAsync(filePath, pdfBytes);
+
+            return new ReportDto
+            {
+                Id          = new Random().Next(1000, 9999),
+                Name        = $"{title} — {period}",
+                ReportType  = request.ReportType,
+                GeneratedAt = DateTime.Now,
+                FilePath    = filePath,
+                FileSize    = pdfBytes.Length,
                 GeneratedBy = "System"
             };
-
-            _logger.LogInformation("Report generated successfully: {FileName}", fileName);
-            return report;
         }
         catch (Exception ex)
         {

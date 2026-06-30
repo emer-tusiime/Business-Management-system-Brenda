@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using BusinessManager.App.Services;
 using BusinessManager.App.ViewModels;
+using BusinessManager.Application.Services;
+using BusinessManager.Reporting;
 using BusinessManager.App.Views.Auth;
 using BusinessManager.App.Views.Backup;
 using BusinessManager.App.Views.Dashboard;
@@ -18,6 +20,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddPresentation(this IServiceCollection services)
     {
+        services.AddSingleton<IPdfGenerator, QuestPdfGenerator>();
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<NotificationCenter>();

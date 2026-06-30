@@ -214,3 +214,49 @@ public class StockStatusToTextConverter : IValueConverter
         throw new NotImplementedException();
     }
 }
+
+// Converts null → Collapsed, non-null → Visible
+public class NullToCollapsedConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value == null ? Visibility.Collapsed : Visibility.Visible;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+
+// Converts int 0 → Visible (for "empty" panels), non-zero → Collapsed
+public class ZeroToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        int count = value is int i ? i : 0;
+        return count == 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+
+// Converts null or empty string → Collapsed, non-empty → Visible
+public class NullOrEmptyToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => string.IsNullOrWhiteSpace(value?.ToString()) ? Visibility.Collapsed : Visibility.Visible;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+
+// Converts string == ConverterParameter → true (for RadioButton IsChecked two-way)
+public class StringEqualityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value?.ToString() == parameter?.ToString();
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is bool b && b) return parameter?.ToString() ?? string.Empty;
+        return Binding.DoNothing;
+    }
+}
