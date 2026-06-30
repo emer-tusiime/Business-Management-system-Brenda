@@ -105,6 +105,25 @@ public class ClientOrderDto
     public string UserName { get; set; } = string.Empty;
     public bool IsOverdue { get; set; }
     public bool IsDueToday { get; set; }
+
+    // Payment
+    public decimal OrderAmount { get; set; }
+    public decimal AmountPaid { get; set; }
+    public decimal Balance => OrderAmount - AmountPaid;
+    public OrderPaymentStatus PaymentStatus { get; set; }
+    public DateTime? PaymentDate { get; set; }
+    public string PaymentStatusLabel => PaymentStatus switch
+    {
+        OrderPaymentStatus.FullyPaid   => "PAID",
+        OrderPaymentStatus.PartialPaid => "PARTIAL",
+        _                              => "UNPAID"
+    };
+    public string PaymentStatusColor => PaymentStatus switch
+    {
+        OrderPaymentStatus.FullyPaid   => "#1B5E20",
+        OrderPaymentStatus.PartialPaid => "#E65100",
+        _                              => "#B71C1C"
+    };
 }
 
 public class AppNotification

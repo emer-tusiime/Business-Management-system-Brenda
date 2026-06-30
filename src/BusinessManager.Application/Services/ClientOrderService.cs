@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using BusinessManager.Domain.Entities;
@@ -59,4 +60,24 @@ public class ClientOrderService : IClientOrderService
 
     public Task<bool> DeleteOrderAsync(int id) =>
         _dbGate.RunAsync(() => _repo.DeleteAsync(id));
+
+    public async Task<ClientOrder> RecordPaymentAsync(int orderId, decimal amountPaid, OrderPaymentStatus paymentStatus)
+    {
+        return await _dbGate.RunAsync(async () =>
+        {
+            var order = await _repo.GetByIdAsync(orderId)
+                ?? throw new InvalidOperationException($"Order {orderId} not found");
+            order.AmountPaid    = amountPaid;
+            order.PaymentStatus = paymentStatus;
+            order.PaymentDate   = DateTime.Now;
+            order.UpdatedAt     = DateTime.Now;
+            return await _repo.UpdateAsync(order);
+        });
+    }
+
+    public async Task<decimal> GetOrderIncomeInRangeAsync(DateTime start, DateTime end)
+    {
+        var orders = await _dbGate.RunAsync(() => _repo.GetByPaymentDateRangeAsync(start, end));
+        return orders.Sum(o => o.AmountPaid);
+    }
 }

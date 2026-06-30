@@ -511,9 +511,13 @@ public class ClientOrderConfiguration : IEntityTypeConfiguration<ClientOrder>
         builder.Property(o => o.Description).IsRequired().HasMaxLength(500);
         builder.Property(o => o.Notes).HasMaxLength(500);
         builder.Property(o => o.Status).HasConversion<int>();
+        builder.Property(o => o.OrderAmount).HasPrecision(18, 2).HasDefaultValue(0m);
+        builder.Property(o => o.AmountPaid).HasPrecision(18, 2).HasDefaultValue(0m);
+        builder.Property(o => o.PaymentStatus).HasConversion<int>().HasDefaultValue(0);
 
         builder.Ignore(o => o.IsOverdue);
         builder.Ignore(o => o.IsDueToday);
+        builder.Ignore(o => o.Balance);
 
         builder.HasOne(o => o.User)
             .WithMany()

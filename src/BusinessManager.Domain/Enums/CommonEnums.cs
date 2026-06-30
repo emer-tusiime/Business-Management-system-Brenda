@@ -30,6 +30,13 @@ public enum OrderStatus
     Delivered = 3
 }
 
+public enum OrderPaymentStatus
+{
+    NotPaid = 0,
+    PartialPaid = 1,
+    FullyPaid = 2
+}
+
 public enum TransactionType
 {
     Sale = 1,

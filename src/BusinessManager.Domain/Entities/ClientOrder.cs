@@ -25,6 +25,13 @@ public class ClientOrder
     [MaxLength(500)]
     public string? Notes { get; set; }
 
+    // Payment tracking
+    public decimal OrderAmount { get; set; }
+    public decimal AmountPaid { get; set; }
+    public OrderPaymentStatus PaymentStatus { get; set; } = OrderPaymentStatus.NotPaid;
+    public DateTime? PaymentDate { get; set; }
+    public decimal Balance => OrderAmount - AmountPaid;
+
     public int UserId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public DateTime? UpdatedAt { get; set; }

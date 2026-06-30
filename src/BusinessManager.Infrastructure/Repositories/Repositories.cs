@@ -456,6 +456,11 @@ public class ClientOrderRepository : Repository<ClientOrder>, IClientOrderReposi
         => await _dbSet.Include(o => o.User)
             .Where(o => o.Status == OrderStatus.Pending || o.Status == OrderStatus.Ready)
             .OrderBy(o => o.PickupDate).ToListAsync();
+
+    public async Task<IEnumerable<ClientOrder>> GetByPaymentDateRangeAsync(DateTime start, DateTime end)
+        => await _dbSet.Include(o => o.User)
+            .Where(o => o.PaymentDate.HasValue && o.PaymentDate >= start && o.PaymentDate < end && o.AmountPaid > 0)
+            .OrderBy(o => o.PaymentDate).ToListAsync();
 }
 
 public class DebtorRepository : Repository<Debtor>, IDebtorRepository

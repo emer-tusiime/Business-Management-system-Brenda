@@ -137,6 +137,8 @@ public interface IClientOrderService
     Task<ClientOrder> UpdateStatusAsync(int orderId, OrderStatus status);
     Task<ClientOrder> UpdateOrderAsync(ClientOrder order);
     Task<bool> DeleteOrderAsync(int id);
+    Task<ClientOrder> RecordPaymentAsync(int orderId, decimal amountPaid, OrderPaymentStatus paymentStatus);
+    Task<decimal> GetOrderIncomeInRangeAsync(DateTime start, DateTime end);
 }
 
 public interface IProductService

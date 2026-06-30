@@ -147,6 +147,12 @@ public partial class App : System.Windows.Application
         }
         catch { /* Column already exists — safe to ignore */ }
 
+        // Add payment columns to ClientOrders
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE ClientOrders ADD COLUMN OrderAmount REAL NOT NULL DEFAULT 0;"); } catch { }
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE ClientOrders ADD COLUMN AmountPaid REAL NOT NULL DEFAULT 0;"); } catch { }
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE ClientOrders ADD COLUMN PaymentStatus INTEGER NOT NULL DEFAULT 0;"); } catch { }
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE ClientOrders ADD COLUMN PaymentDate TEXT NULL;"); } catch { }
+
         await context.Database.ExecuteSqlRawAsync("""
             CREATE TABLE IF NOT EXISTS "Savings" (
                 "Id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,

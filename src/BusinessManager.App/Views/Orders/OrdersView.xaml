@@ -4,12 +4,11 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             mc:Ignorable="d" d:DesignHeight="800" d:DesignWidth="1100"
+             xmlns:vm="clr-namespace:BusinessManager.App.ViewModels"
+             mc:Ignorable="d" d:DesignHeight="800" d:DesignWidth="1300"
              Background="#F1F5F9"
              Loaded="OrdersView_Loaded">
-    <UserControl.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolVis"/>
-    </UserControl.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -22,8 +21,8 @@
         <Border Grid.Row="0">
             <Border.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                    <GradientStop Color="#4A148C" Offset="0"/>
-                    <GradientStop Color="#7B1FA2" Offset="1"/>
+                    <GradientStop Color="#0D47A1" Offset="0"/>
+                    <GradientStop Color="#1976D2" Offset="1"/>
                 </LinearGradientBrush>
             </Border.Background>
             <Grid Margin="20,14">
@@ -32,23 +31,18 @@
                                              Foreground="White" VerticalAlignment="Center" Margin="0,0,12,0"/>
                     <StackPanel>
                         <TextBlock Text="Client Orders" FontSize="18" FontWeight="Bold" Foreground="White"/>
-                        <TextBlock Text="Track jobs submitted by clients" FontSize="11" Foreground="#CE93D8"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding OverdueCount, StringFormat='{}{0} overdue'}"
+                                       Foreground="#EF9A9A" FontSize="11" Margin="0,0,16,0"/>
+                            <TextBlock Text="{Binding DueTodayCount, StringFormat='{}{0} due today'}"
+                                       Foreground="#FFF9C4" FontSize="11"/>
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
-                <!-- Status pills -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Border Background="#B71C1C" CornerRadius="12" Padding="12,4" Margin="0,0,8,0"
-                            Visibility="{Binding OverdueCount, Converter={StaticResource BoolVis}}">
-                        <TextBlock Foreground="White" FontSize="12" FontWeight="Bold">
-                            <Run Text="{Binding OverdueCount}"/><Run Text=" Overdue"/>
-                        </TextBlock>
-                    </Border>
-                    <Border Background="#E65100" CornerRadius="12" Padding="12,4" Margin="0,0,16,0"
-                            Visibility="{Binding DueTodayCount, Converter={StaticResource BoolVis}}">
-                        <TextBlock Foreground="White" FontSize="12" FontWeight="Bold">
-                            <Run Text="{Binding DueTodayCount}"/><Run Text=" Due Today"/>
-                        </TextBlock>
-                    </Border>
+                    <CheckBox Content="Pending only" IsChecked="{Binding ShowPendingOnly}"
+                              Foreground="White" Margin="0,0,16,0"
+                              Command="{Binding ToggleFilterCommand}"/>
                     <Button Style="{StaticResource MaterialDesignIconButton}"
                             Command="{Binding LoadCommand}" Foreground="White" ToolTip="Refresh">
                         <materialDesign:PackIcon Kind="Refresh" Width="20" Height="20"/>
@@ -57,22 +51,23 @@
             </Grid>
         </Border>
 
-        <!-- New order form -->
-        <Border Grid.Row="1" Background="White" Margin="16,12,16,0" CornerRadius="10" Padding="16,14">
-            <Border.Effect>
-                <DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.08"/>
-            </Border.Effect>
+        <!-- New Order Form -->
+        <Border Grid.Row="1" Background="White" CornerRadius="10" Margin="16,12,16,0" Padding="16,14">
+            <Border.Effect><DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.08"/></Border.Effect>
             <StackPanel>
-                <TextBlock Text="Register New Order" FontSize="13" FontWeight="SemiBold" Foreground="#374151" Margin="0,0,0,12"/>
+                <TextBlock Text="New Order" FontSize="13" FontWeight="SemiBold"
+                           Foreground="#374151" Margin="0,0,0,12"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="180"/>
+                        <ColumnDefinition Width="130"/>
                         <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="150"/>
                         <ColumnDefinition Width="140"/>
-                        <ColumnDefinition Width="1.5*"/>
                         <ColumnDefinition Width="160"/>
-                        <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
+
                     <TextBox Grid.Column="0" Margin="0,0,8,0"
                              materialDesign:HintAssist.Hint="Client Name *"
                              Style="{StaticResource MaterialDesignOutlinedTextBox}"
@@ -85,37 +80,99 @@
                              materialDesign:HintAssist.Hint="Job Description *"
                              Style="{StaticResource MaterialDesignOutlinedTextBox}"
                              Text="{Binding NewDescription, UpdateSourceTrigger=PropertyChanged}"/>
-                    <StackPanel Grid.Column="3" Margin="0,0,8,0">
-                        <TextBlock Text="Pickup Date" FontSize="11" Foreground="#6B7280" Margin="4,0,0,2"/>
-                        <DatePicker SelectedDate="{Binding NewPickupDate}"/>
-                    </StackPanel>
-                    <TextBox Grid.Column="4" Margin="0,0,8,0"
+                    <TextBox Grid.Column="3" Margin="0,0,8,0"
+                             materialDesign:HintAssist.Hint="Order Amount (UGX)"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             Text="{Binding NewOrderAmount, UpdateSourceTrigger=PropertyChanged}"/>
+                    <DatePicker Grid.Column="4" Margin="0,0,8,0"
+                                materialDesign:HintAssist.Hint="Pickup Date"
+                                Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                SelectedDate="{Binding NewPickupDate}"/>
+                    <TextBox Grid.Column="5" Margin="0,0,8,0"
                              materialDesign:HintAssist.Hint="Notes"
                              Style="{StaticResource MaterialDesignOutlinedTextBox}"
                              Text="{Binding NewNotes, UpdateSourceTrigger=PropertyChanged}"/>
-                    <Button Grid.Column="5" Command="{Binding SaveOrderCommand}"
+
+                    <Button Grid.Column="6" Command="{Binding SaveOrderCommand}"
                             Style="{StaticResource MaterialDesignRaisedButton}"
-                            Background="#4A148C" BorderBrush="#4A148C"
-                            Foreground="White" Height="52" Padding="18,0">
+                            Background="#0D47A1" BorderBrush="#0D47A1"
+                            Foreground="White" Height="52" Padding="16,0">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Plus" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBlock Text="ADD ORDER" FontWeight="Bold" VerticalAlignment="Center"/>
+                            <materialDesign:PackIcon Kind="Plus" Width="16" Height="16"
+                                                     VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <TextBlock Text="SAVE ORDER" FontWeight="Bold" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                 </Grid>
             </StackPanel>
         </Border>
 
-        <!-- Filter row -->
-        <Border Grid.Row="2" Background="White" Margin="16,8,16,0" CornerRadius="8" Padding="14,10">
-            <StackPanel Orientation="Horizontal">
-                <CheckBox Content="Show active orders only" IsChecked="{Binding ShowPendingOnly}"
-                          Command="{Binding ToggleFilterCommand}" Margin="0,0,24,0"/>
-            </StackPanel>
+        <!-- Payment recording panel (visible when a row's Pay button is clicked) -->
+        <Border Grid.Row="2" Margin="16,10,16,0" CornerRadius="10"
+                Visibility="{Binding ShowPaymentPanel, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Color="#E8F5E9" Offset="0"/>
+                    <GradientStop Color="#F1F8E9" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            <Border.Effect><DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.12"/></Border.Effect>
+            <Grid Margin="16,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <materialDesign:PackIcon Kind="CashPlus" Grid.Column="0" Width="28" Height="28"
+                                         Foreground="#1B5E20" VerticalAlignment="Center" Margin="0,0,12,0"/>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding PayingOrder.ClientName, StringFormat='Record payment for: {0}'}"
+                               FontWeight="Bold" FontSize="13" Foreground="#1B5E20"/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding PayingOrder.OrderAmount, StringFormat='Order total: UGX {0:N0}'}"
+                                   FontSize="11" Foreground="#374151" Margin="0,0,16,0"/>
+                        <TextBlock Text="{Binding PayingOrder.Balance, StringFormat='Balance: UGX {0:N0}'}"
+                                   FontSize="11" Foreground="#B71C1C" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <TextBox Grid.Column="2" Margin="0,0,10,0" Height="52"
+                         materialDesign:HintAssist.Hint="Amount Received (UGX) *"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         Text="{Binding PaymentAmount, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <ComboBox Grid.Column="3" Margin="0,0,10,0" Height="52"
+                          materialDesign:HintAssist.Hint="Payment Status"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          SelectedItem="{Binding SelectedPaymentStatus}"
+                          ItemsSource="{x:Static vm:OrdersViewModel.PaymentStatuses}"/>
+
+                <Button Grid.Column="4" Command="{Binding RecordPaymentCommand}"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Background="#1B5E20" BorderBrush="#1B5E20" Foreground="White"
+                        Height="48" Padding="16,0" Margin="0,0,8,0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Check" Width="16" Height="16"
+                                                 VerticalAlignment="Center" Margin="0,0,4,0"/>
+                        <TextBlock Text="CONFIRM PAYMENT" FontWeight="Bold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Grid.Column="5" Command="{Binding CancelPaymentCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Height="48" Padding="12,0">
+                    <materialDesign:PackIcon Kind="Close" Width="16" Height="16"/>
+                </Button>
+            </Grid>
         </Border>
 
         <!-- Orders table -->
-        <Border Grid.Row="3" Background="White" Margin="16,8,16,16" CornerRadius="10">
+        <Border Grid.Row="3" Background="White" Margin="16,10,16,16" CornerRadius="10">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.08"/>
             </Border.Effect>
@@ -137,14 +194,14 @@
                     </Style>
                 </DataGrid.RowStyle>
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Client" Binding="{Binding ClientName}" Width="130"/>
-                    <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" Width="110"/>
-                    <DataGridTextColumn Header="Job Description" Binding="{Binding Description}" Width="*"/>
-                    <DataGridTextColumn Header="Order Date" Binding="{Binding OrderDate, StringFormat='d MMM'}" Width="90"/>
-                    <DataGridTemplateColumn Header="Pickup Date" Width="120">
+                    <DataGridTextColumn Header="Client" Binding="{Binding ClientName}" Width="120"/>
+                    <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" Width="100"/>
+                    <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*"/>
+                    <DataGridTextColumn Header="Order Date" Binding="{Binding OrderDate, StringFormat='d MMM'}" Width="80"/>
+                    <DataGridTemplateColumn Header="Pickup" Width="110">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock VerticalAlignment="Center" Margin="8,0">
+                                <TextBlock VerticalAlignment="Center" Margin="4,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Text" Value="{Binding PickupDate, StringFormat='d MMM yyyy'}"/>
@@ -165,7 +222,9 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="Status" Width="130">
+
+                    <!-- Job status badge -->
+                    <DataGridTemplateColumn Header="Job Status" Width="120">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Border CornerRadius="10" Padding="8,3" Margin="4,2" HorizontalAlignment="Left">
@@ -201,22 +260,92 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="Actions" Width="140">
+
+                    <!-- Order amount -->
+                    <DataGridTemplateColumn Header="Order Amount" Width="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding OrderAmount, StringFormat='UGX {0:N0}'}"
+                                           FontWeight="SemiBold" Foreground="#374151"
+                                           VerticalAlignment="Center" Margin="4,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Amount paid -->
+                    <DataGridTemplateColumn Header="Amount Paid" Width="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding AmountPaid, StringFormat='UGX {0:N0}'}"
+                                           FontWeight="Bold" Foreground="#1B5E20"
+                                           VerticalAlignment="Center" Margin="4,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Balance -->
+                    <DataGridTemplateColumn Header="Balance" Width="110">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Balance, StringFormat='UGX {0:N0}'}"
+                                           FontWeight="Bold" Foreground="#B71C1C"
+                                           VerticalAlignment="Center" Margin="4,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Payment status badge -->
+                    <DataGridTemplateColumn Header="Payment" Width="110">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="10" Padding="8,3" Margin="4,2" HorizontalAlignment="Left">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#B71C1C"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding PaymentStatus}" Value="1">
+                                                    <Setter Property="Background" Value="#E65100"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding PaymentStatus}" Value="2">
+                                                    <Setter Property="Background" Value="#1B5E20"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="{Binding PaymentStatusLabel}"
+                                               FontSize="11" FontWeight="Bold" Foreground="White"/>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Actions -->
+                    <DataGridTemplateColumn Header="Actions" Width="170">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
+                                    <!-- Record Payment -->
+                                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                                            Command="{Binding DataContext.OpenPaymentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            ToolTip="Record Payment" Foreground="#1B5E20">
+                                        <materialDesign:PackIcon Kind="CashPlus" Width="18" Height="18"/>
+                                    </Button>
+                                    <!-- Mark Ready -->
                                     <Button Style="{StaticResource MaterialDesignIconButton}"
                                             Command="{Binding DataContext.MarkReadyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"
-                                            ToolTip="Mark Ready for Pickup" Foreground="#2E7D32">
+                                            ToolTip="Mark Ready for Pickup" Foreground="#1565C0">
                                         <materialDesign:PackIcon Kind="CheckCircle" Width="18" Height="18"/>
                                     </Button>
+                                    <!-- Mark Delivered -->
                                     <Button Style="{StaticResource MaterialDesignIconButton}"
                                             Command="{Binding DataContext.MarkDeliveredCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"
-                                            ToolTip="Mark Delivered" Foreground="#1565C0">
+                                            ToolTip="Mark Delivered" Foreground="#7B1FA2">
                                         <materialDesign:PackIcon Kind="PackageUp" Width="18" Height="18"/>
                                     </Button>
+                                    <!-- Delete -->
                                     <Button Style="{StaticResource MaterialDesignIconButton}"
                                             Command="{Binding DataContext.DeleteOrderCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"

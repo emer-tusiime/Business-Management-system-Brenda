@@ -16,6 +16,7 @@ public class ReportService : IReportService
     private readonly IExpenseRepository _expenseRepository;
     private readonly IDebtorRepository _debtorRepository;
     private readonly IProductRepository _productRepository;
+    private readonly IClientOrderRepository _orderRepository;
     private readonly DbAccessGate _dbGate;
     private readonly ILogger<ReportService> _logger;
     private readonly IPdfGenerator? _pdfGenerator;
@@ -25,6 +26,7 @@ public class ReportService : IReportService
         IExpenseRepository expenseRepository,
         IDebtorRepository debtorRepository,
         IProductRepository productRepository,
+        IClientOrderRepository orderRepository,
         DbAccessGate dbGate,
         ILogger<ReportService> logger,
         IPdfGenerator? pdfGenerator = null)
@@ -33,6 +35,7 @@ public class ReportService : IReportService
         _expenseRepository = expenseRepository;
         _debtorRepository = debtorRepository;
         _productRepository = productRepository;
+        _orderRepository = orderRepository;
         _dbGate = dbGate;
         _logger = logger;
         _pdfGenerator = pdfGenerator;
@@ -49,8 +52,9 @@ public class ReportService : IReportService
 
             var sales = await _saleRepository.GetByDateRangeAsync(startDate, endDate);
             var expenses = await _expenseRepository.GetByDateRangeAsync(startDate, endDate);
+            var orderPayments = await _orderRepository.GetByPaymentDateRangeAsync(startDate, endDate);
 
-            var totalMadeToday = sales.Sum(s => GetSaleTotal(s));
+            var totalMadeToday = sales.Sum(s => GetSaleTotal(s)) + orderPayments.Sum(o => o.AmountPaid);
             var totalExpenses = expenses.Sum(e => e.Amount);
             var drawerBalance = totalMadeToday - totalExpenses;
 
@@ -87,8 +91,9 @@ public class ReportService : IReportService
 
             var sales = await _saleRepository.GetByDateRangeAsync(weekStart, weekEnd);
             var expenses = await _expenseRepository.GetByDateRangeAsync(weekStart, weekEnd);
+            var orderPayments = await _orderRepository.GetByPaymentDateRangeAsync(weekStart, weekEnd);
 
-            var totalIncome = sales.Sum(s => GetSaleTotal(s));
+            var totalIncome = sales.Sum(s => GetSaleTotal(s)) + orderPayments.Sum(o => o.AmountPaid);
             var totalExpenses = expenses.Sum(e => e.Amount);
 
             return new WeeklySummaryDto
@@ -121,8 +126,9 @@ public class ReportService : IReportService
 
             var sales = await _saleRepository.GetByDateRangeAsync(startDate, endDate);
             var expenses = await _expenseRepository.GetByDateRangeAsync(startDate, endDate);
+            var orderPayments = await _orderRepository.GetByPaymentDateRangeAsync(startDate, endDate);
 
-            var totalIncome = sales.Sum(s => GetSaleTotal(s));
+            var totalIncome = sales.Sum(s => GetSaleTotal(s)) + orderPayments.Sum(o => o.AmountPaid);
             var totalExpenses = expenses.Sum(e => e.Amount);
             var totalProfit = totalIncome - totalExpenses;
 

@@ -111,4 +111,5 @@ public interface IClientOrderRepository : IRepository<ClientOrder>
     Task<IEnumerable<ClientOrder>> GetOverdueAsync();
     Task<IEnumerable<ClientOrder>> GetByDateRangeAsync(DateTime startDate, DateTime endDate);
     Task<IEnumerable<ClientOrder>> GetPendingAsync();
+    Task<IEnumerable<ClientOrder>> GetByPaymentDateRangeAsync(DateTime start, DateTime end);
 }
