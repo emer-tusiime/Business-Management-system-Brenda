@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using BusinessManager.Application.Services;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -35,13 +36,38 @@ public class QuestPdfGenerator : IPdfGenerator
         }).GeneratePdf();
     }
 
+    private static string? FindLogoPath()
+    {
+        // Look next to the exe first, then in the working directory
+        var candidates = new[]
+        {
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "brenda.jpeg"),
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "brenda.jpg"),
+            Path.Combine(Directory.GetCurrentDirectory(), "Assets", "brenda.jpeg"),
+        };
+        foreach (var p in candidates)
+            if (File.Exists(p)) return p;
+        return null;
+    }
+
     private static void BuildHeader(IContainer container, FinancialReportData data)
     {
+        var logoPath = FindLogoPath();
+
         container.Column(col =>
         {
-            // Company header row
+            // Company header row with logo
             col.Item().Row(row =>
             {
+                // Logo
+                if (logoPath != null)
+                {
+                    row.ConstantItem(72).Height(62).Padding(2)
+                        .Image(logoPath, ImageScaling.FitArea);
+                    row.ConstantItem(14);
+                }
+
+                // Name + address
                 row.RelativeItem().Column(nameCol =>
                 {
                     nameCol.Item().Text(CompanyName)
@@ -49,6 +75,8 @@ public class QuestPdfGenerator : IPdfGenerator
                     nameCol.Item().PaddingTop(2).Text(CompanyAddress)
                         .FontSize(9).FontColor("#555555");
                 });
+
+                // Contact (right-aligned)
                 row.ConstantItem(200).Column(contactCol =>
                 {
                     contactCol.Item().AlignRight().Text(CompanyPhone)
