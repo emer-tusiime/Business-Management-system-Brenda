@@ -24,9 +24,17 @@ public partial class OrdersViewModel : ObservableObject
 
     // New order form
     [ObservableProperty] private ObservableCollection<ClientOrderDto> _orders = new();
-    [ObservableProperty] private string _newClientName = string.Empty;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveOrderCommand))]
+    private string _newClientName = string.Empty;
+
     [ObservableProperty] private string _newPhone = string.Empty;
-    [ObservableProperty] private string _newDescription = string.Empty;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveOrderCommand))]
+    private string _newDescription = string.Empty;
+
     [ObservableProperty] private DateTime _newPickupDate = DateTime.Today.AddDays(1);
     [ObservableProperty] private string _newNotes = string.Empty;
     [ObservableProperty] private decimal _newOrderAmount;
@@ -56,7 +64,6 @@ public partial class OrdersViewModel : ObservableObject
         _logger = logger;
         _currentUser = currentUser;
 
-        SaveOrderCommand      = new RelayCommand(async () => await SaveOrderAsync(), CanSave);
         MarkReadyCommand      = new RelayCommand<ClientOrderDto>(async dto => await UpdateStatusAsync(dto, OrderStatus.Ready));
         MarkDeliveredCommand  = new RelayCommand<ClientOrderDto>(async dto => await UpdateStatusAsync(dto, OrderStatus.Delivered));
         DeleteOrderCommand    = new RelayCommand<ClientOrderDto>(async dto => await DeleteAsync(dto));
@@ -67,7 +74,6 @@ public partial class OrdersViewModel : ObservableObject
         CancelPaymentCommand  = new RelayCommand(ClosePaymentPanel);
     }
 
-    public IRelayCommand SaveOrderCommand { get; }
     public IRelayCommand<ClientOrderDto> MarkReadyCommand { get; }
     public IRelayCommand<ClientOrderDto> MarkDeliveredCommand { get; }
     public IRelayCommand<ClientOrderDto> DeleteOrderCommand { get; }
@@ -84,12 +90,6 @@ public partial class OrdersViewModel : ObservableObject
     private bool CanSave() =>
         !string.IsNullOrWhiteSpace(NewClientName) && !string.IsNullOrWhiteSpace(NewDescription);
 
-    partial void OnNewClientNameChanged(string value) =>
-        ((RelayCommand)SaveOrderCommand).NotifyCanExecuteChanged();
-
-    partial void OnNewDescriptionChanged(string value) =>
-        ((RelayCommand)SaveOrderCommand).NotifyCanExecuteChanged();
-
     private bool CanRecordPayment() => PayingOrder != null && PaymentAmount > 0;
 
     partial void OnPaymentAmountChanged(decimal value) =>
@@ -97,6 +97,7 @@ public partial class OrdersViewModel : ObservableObject
 
     // ── Save new order ───────────────────────────────────────────────────────
 
+    [RelayCommand(CanExecute = nameof(CanSave))]
     private async Task SaveOrderAsync()
     {
         try
