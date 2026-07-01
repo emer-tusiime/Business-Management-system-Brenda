@@ -13,7 +13,7 @@ $iss     = Join-Path $root "installer\AlindaBrend.iss"
 
 # ── 1. Clean previous output ────────────────────────────────
 Write-Host "`n[1/3] Cleaning dist..." -ForegroundColor Cyan
-if (Test-Path $distDir) { Remove-Item $distDir -Recurse -Force }
+if (Test-Path $distDir) { Remove-Item $distDir -Recurse -Force -ErrorAction SilentlyContinue }
 New-Item -ItemType Directory -Force -Path $distDir | Out-Null
 New-Item -ItemType Directory -Force -Path $outDir  | Out-Null
 
@@ -36,6 +36,7 @@ Write-Host "[3/3] Building installer..." -ForegroundColor Cyan
 $isccPaths = @(
     "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
     "C:\Program Files\Inno Setup 6\ISCC.exe",
+    "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe",
     "C:\Program Files (x86)\Inno Setup 5\ISCC.exe"
 )
 $iscc = $isccPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
@@ -51,6 +52,8 @@ if (-not $iscc) {
     exit 0
 }
 
+$env:TEMP = "D:\BuildTemp"; $env:TMP = "D:\BuildTemp"
+New-Item -ItemType Directory -Force -Path "D:\BuildTemp" | Out-Null
 & $iscc $iss
 if ($LASTEXITCODE -ne 0) { Write-Error "Inno Setup build failed"; exit 1 }
 
