@@ -224,9 +224,9 @@
                                 <TextBlock Text="{Binding LastReport.Name}" FontSize="14" FontWeight="SemiBold"
                                            Foreground="#111827" TextWrapping="Wrap" Margin="0,2,0,2"/>
                                 <TextBlock Foreground="#9CA3AF" FontSize="11">
-                                    <Run Text="{Binding LastReport.GeneratedAtText}"/>
+                                    <Run Text="{Binding LastReport.GeneratedAtText, Mode=OneWay}"/>
                                     <Run Text=" · "/>
-                                    <Run Text="{Binding LastReport.SizeText}"/>
+                                    <Run Text="{Binding LastReport.SizeText, Mode=OneWay}"/>
                                 </TextBlock>
                             </StackPanel>
 
@@ -316,9 +316,9 @@
                                                                    FontWeight="SemiBold" Foreground="#1F2937"
                                                                    TextWrapping="Wrap"/>
                                                         <TextBlock Foreground="#9CA3AF" FontSize="11" Margin="0,2,0,0">
-                                                            <Run Text="{Binding GeneratedAtText}"/>
+                                                            <Run Text="{Binding GeneratedAtText, Mode=OneWay}"/>
                                                             <Run Text=" · "/>
-                                                            <Run Text="{Binding SizeText}"/>
+                                                            <Run Text="{Binding SizeText, Mode=OneWay}"/>
                                                         </TextBlock>
                                                     </StackPanel>
 
