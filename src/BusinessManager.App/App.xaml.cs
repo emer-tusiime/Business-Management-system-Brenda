@@ -149,18 +149,15 @@ public partial class App : System.Windows.Application
 
     private async Task EnsureNewTablesAsync(AppDbContext context)
     {
-        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE Savings ADD COLUMN Recipient TEXT NOT NULL DEFAULT 'BANK';"); } catch { }
-
-        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE ClientOrders ADD COLUMN OrderAmount REAL NOT NULL DEFAULT 0;"); } catch { }
-        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE ClientOrders ADD COLUMN AmountPaid REAL NOT NULL DEFAULT 0;"); } catch { }
-        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE ClientOrders ADD COLUMN PaymentStatus INTEGER NOT NULL DEFAULT 0;"); } catch { }
-        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE ClientOrders ADD COLUMN PaymentDate TEXT NULL;"); } catch { }
+        // Create tables with full schema first (handles databases that never had these tables).
+        // ALTER TABLE statements below handle databases where tables exist but are missing columns.
 
         await context.Database.ExecuteSqlRawAsync("""
             CREATE TABLE IF NOT EXISTS "Savings" (
                 "Id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                 "Date" TEXT NOT NULL,
                 "Amount" REAL NOT NULL,
+                "Recipient" TEXT NOT NULL DEFAULT 'BANK',
                 "Notes" TEXT NULL,
                 "UserId" INTEGER NOT NULL,
                 "CreatedAt" TEXT NOT NULL,
@@ -179,11 +176,24 @@ public partial class App : System.Windows.Application
                 "Status" INTEGER NOT NULL DEFAULT 1,
                 "Notes" TEXT NULL,
                 "UserId" INTEGER NOT NULL,
+                "OrderAmount" REAL NOT NULL DEFAULT 0,
+                "AmountPaid" REAL NOT NULL DEFAULT 0,
+                "PaymentStatus" INTEGER NOT NULL DEFAULT 0,
+                "PaymentDate" TEXT NULL,
                 "CreatedAt" TEXT NOT NULL,
                 "UpdatedAt" TEXT NULL,
                 FOREIGN KEY("UserId") REFERENCES "Users"("Id")
             );
             """);
+
+        // Add any columns that may be missing in older databases where the tables already existed.
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE Savings ADD COLUMN Recipient TEXT NOT NULL DEFAULT 'BANK';"); } catch { }
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE ClientOrders ADD COLUMN OrderAmount REAL NOT NULL DEFAULT 0;"); } catch { }
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE ClientOrders ADD COLUMN AmountPaid REAL NOT NULL DEFAULT 0;"); } catch { }
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE ClientOrders ADD COLUMN PaymentStatus INTEGER NOT NULL DEFAULT 0;"); } catch { }
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE ClientOrders ADD COLUMN PaymentDate TEXT NULL;"); } catch { }
+        // ExpenseDate was added after initial schema — backfill from CreatedAt for old rows
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE Expenses ADD COLUMN ExpenseDate TEXT NOT NULL DEFAULT (datetime('now'));"); } catch { }
     }
 
     private async Task SeedDataAsync(IServiceProvider serviceProvider)
